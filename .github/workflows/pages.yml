@@ -28,8 +28,10 @@ jobs:
       - run: pnpm build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          # Public browser connection defaults; repository variables can override them.
+          # Never use a Supabase secret or service_role key in this build.
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://zqhhoiqmnzmsrendkive.supabase.co' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_iWu9L5yEb8s28TycM7ljFg_lcw9fSIf' }}
           VITE_WORKSPACE_ID: ${{ vars.VITE_WORKSPACE_ID }}
       - uses: actions/upload-pages-artifact@v3
         with:
