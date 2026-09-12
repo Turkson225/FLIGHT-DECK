@@ -3,3 +3,6 @@ dist/
 .env*
 !.env.example
 *.tsbuildinfo
+
+# Aircraft credentials remain local
+firmware/**/Secrets.h

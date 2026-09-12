@@ -4,6 +4,12 @@ A React + TypeScript fixed-wing engineering console, hosted as a static GitHub P
 
 **Start here: [SETUP.md](./SETUP.md).** The login form displays an honest setup state until a Supabase URL and publishable key are configured. The interactive DEMO needs no account. Do not paste service keys, device tokens, SMTP passwords or email verification codes into chat or GitHub source.
 
+## Connect the NodeMCU
+
+The combined ESP8266 sketch reads the MPU6050, calibrated aircraft voltage and the existing Nano v1 UART, then uploads authenticated telemetry through the MiFi. Start with [the setup page](public/NODEMCU_SETUP.html) and [firmware instructions](firmware/FlightDeck_Node_Live/README.md). Upload only the NodeMCU, and redeploy both Supabase function bundles for the updated nullable PWM fields and capture timestamps. No live actuator transport is enabled.
+
+Rebuild the credential-free source ZIP with `python scripts/package-node-firmware.py`. The allowlist excludes local `Secrets.h`.
+
 ## Included
 
 - Charcoal/orange/lime design with a light theme, responsive workspace navigation, accessible controls and reduced-motion support.

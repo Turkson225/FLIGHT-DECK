@@ -132,3 +132,15 @@ test('deployed ingress accepts safety telemetry and suppresses unverified deploy
   assert.ok(clean.receivedAt>frame.receivedAt);assert.equal(writes[0].rpc,'fd_ingest');
  }
 });
+
+test('ingress preserves PWM-only data and rejects expired capture timestamps',async()=>{
+ const payload=JSON.parse(await readFile(new URL('./fixtures/node-telemetry.json',import.meta.url),'utf8'))[0];
+ for(const old of [false,true]){
+  const token='b'.repeat(64),{handler,writes}=await load('telemetry-ingest',{env:{DEVICE_SHARED_TOKEN:token,DEVICE_ID:'FD-001',DEVICE_WORKSPACE_ID:userId}});
+  const data=structuredClone(payload);data.frame.sampledAt=Date.now()-(old?30000:100);
+  const req=new Request('https://example.supabase.co/functions/v1/telemetry-ingest',{method:'POST',headers:{'x-device-token':token},body:JSON.stringify(data)});
+  assert.equal((await handler(req)).status,old?422:200);
+  if(old)assert.equal(writes.length,0);
+  else {assert.equal(writes[0].parameters.f.outputs.leftAileron.normalized,null);assert.equal(writes[0].parameters.f.sampledAt,data.frame.sampledAt);}
+ }
+});

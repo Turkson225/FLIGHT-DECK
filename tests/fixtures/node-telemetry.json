@@ -1,0 +1,472 @@
+[
+  {
+    "frame": {
+      "schemaVersion": 1,
+      "source": "LIVE",
+      "deviceId": "FD-001",
+      "bootId": "esp-test-fixture",
+      "seq": 1,
+      "uptimeMs": 1000,
+      "receivedAt": 0,
+      "sampledAt": 1789171200000,
+      "attitude": {
+        "pitch": 0,
+        "roll": 0,
+        "yaw": null
+      },
+      "accel": {
+        "x": 0,
+        "y": 0,
+        "z": -9.806650162
+      },
+      "gyro": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "linearAcceleration": null,
+      "chipTemp": 31.5,
+      "sampleHz": 90,
+      "aircraftVoltage": 12.10000038,
+      "transmitterVoltage": null,
+      "radio": null,
+      "links": {
+        "uart": true,
+        "wifi": true,
+        "radio": true,
+        "uplink": true
+      },
+      "wifiRssi": -55,
+      "imu": true,
+      "armed": null,
+      "inputs": null,
+      "configVersion": null,
+      "safety": null,
+      "mode": "Manual RC",
+      "mixEnabled": true,
+      "outputs": {
+        "leftAileron": {
+          "pwm": 1500,
+          "normalized": null,
+          "saturated": null
+        },
+        "rightAileron": {
+          "pwm": 1500,
+          "normalized": null,
+          "saturated": null
+        },
+        "elevator": {
+          "pwm": 1500,
+          "normalized": null,
+          "saturated": null
+        },
+        "rudder": {
+          "pwm": 1500,
+          "normalized": null,
+          "saturated": null
+        },
+        "throttle": {
+          "pwm": 1000,
+          "normalized": null,
+          "saturated": null
+        }
+      },
+      "validity": {
+        "imu": "valid",
+        "attitude": "valid",
+        "imuCalibration": "unknown",
+        "aircraftBattery": "valid",
+        "transmitterBattery": "unknown",
+        "uart": "valid",
+        "linearAcceleration": "unsupported",
+        "navigation": "not_installed",
+        "safety": "unsupported",
+        "inputs": "unsupported"
+      }
+    },
+    "capabilities": {
+      "schemaVersion": 1,
+      "deviceId": "FD-001",
+      "bootId": "esp-test-fixture",
+      "firmware": {
+        "nano": "UART v1; build version not reported",
+        "node": "flight-deck-node/1.0.0"
+      },
+      "features": {
+        "attitude": true,
+        "relativeYaw": false,
+        "linearAcceleration": false,
+        "gps": false,
+        "airspeed": false,
+        "barometer": false,
+        "stabilization": false,
+        "autopilot": false,
+        "servoFeedback": false,
+        "flightMixTransitions": false,
+        "transmitterBuzzerConfig": false,
+        "parachute": false,
+        "parachuteFeedback": false,
+        "flightFailureDetection": false,
+        "takeoffReadiness": false
+      },
+      "commands": [],
+      "maintenance": {
+        "authorized": false,
+        "expiresAt": 0
+      },
+      "units": {
+        "acceleration": "m/s2",
+        "angularVelocity": "deg/s",
+        "attitude": "deg",
+        "voltage": "V",
+        "pwm": "us"
+      }
+    }
+  },
+  {
+    "frame": {
+      "schemaVersion": 1,
+      "source": "LIVE",
+      "deviceId": "FD-001",
+      "bootId": "esp-test-fixture",
+      "seq": 2,
+      "uptimeMs": 1200,
+      "receivedAt": 0,
+      "sampledAt": 1789171200000,
+      "attitude": {
+        "pitch": null,
+        "roll": null,
+        "yaw": null
+      },
+      "accel": {
+        "x": null,
+        "y": null,
+        "z": null
+      },
+      "gyro": {
+        "x": null,
+        "y": null,
+        "z": null
+      },
+      "linearAcceleration": null,
+      "chipTemp": null,
+      "sampleHz": null,
+      "aircraftVoltage": 12.10000038,
+      "transmitterVoltage": null,
+      "radio": null,
+      "links": {
+        "uart": true,
+        "wifi": true,
+        "radio": true,
+        "uplink": true
+      },
+      "wifiRssi": -55,
+      "imu": false,
+      "armed": null,
+      "inputs": null,
+      "configVersion": null,
+      "safety": null,
+      "mode": "Manual RC",
+      "mixEnabled": true,
+      "outputs": {
+        "leftAileron": {
+          "pwm": 1500,
+          "normalized": null,
+          "saturated": null
+        },
+        "rightAileron": {
+          "pwm": 1500,
+          "normalized": null,
+          "saturated": null
+        },
+        "elevator": {
+          "pwm": 1500,
+          "normalized": null,
+          "saturated": null
+        },
+        "rudder": {
+          "pwm": 1500,
+          "normalized": null,
+          "saturated": null
+        },
+        "throttle": {
+          "pwm": 1000,
+          "normalized": null,
+          "saturated": null
+        }
+      },
+      "validity": {
+        "imu": "invalid",
+        "attitude": "unknown",
+        "imuCalibration": "unknown",
+        "aircraftBattery": "valid",
+        "transmitterBattery": "unknown",
+        "uart": "valid",
+        "linearAcceleration": "unsupported",
+        "navigation": "not_installed",
+        "safety": "unsupported",
+        "inputs": "unsupported"
+      }
+    },
+    "capabilities": {
+      "schemaVersion": 1,
+      "deviceId": "FD-001",
+      "bootId": "esp-test-fixture",
+      "firmware": {
+        "nano": "UART v1; build version not reported",
+        "node": "flight-deck-node/1.0.0"
+      },
+      "features": {
+        "attitude": true,
+        "relativeYaw": false,
+        "linearAcceleration": false,
+        "gps": false,
+        "airspeed": false,
+        "barometer": false,
+        "stabilization": false,
+        "autopilot": false,
+        "servoFeedback": false,
+        "flightMixTransitions": false,
+        "transmitterBuzzerConfig": false,
+        "parachute": false,
+        "parachuteFeedback": false,
+        "flightFailureDetection": false,
+        "takeoffReadiness": false
+      },
+      "commands": [],
+      "maintenance": {
+        "authorized": false,
+        "expiresAt": 0
+      },
+      "units": {
+        "acceleration": "m/s2",
+        "angularVelocity": "deg/s",
+        "attitude": "deg",
+        "voltage": "V",
+        "pwm": "us"
+      }
+    }
+  },
+  {
+    "frame": {
+      "schemaVersion": 1,
+      "source": "LIVE",
+      "deviceId": "FD-001",
+      "bootId": "esp-test-fixture",
+      "seq": 3,
+      "uptimeMs": 1400,
+      "receivedAt": 0,
+      "sampledAt": 1789171200000,
+      "attitude": {
+        "pitch": 0,
+        "roll": 0,
+        "yaw": null
+      },
+      "accel": {
+        "x": 0,
+        "y": 0,
+        "z": -9.806650162
+      },
+      "gyro": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "linearAcceleration": null,
+      "chipTemp": 31.5,
+      "sampleHz": 90,
+      "aircraftVoltage": 12.10000038,
+      "transmitterVoltage": null,
+      "radio": null,
+      "links": {
+        "uart": false,
+        "wifi": true,
+        "radio": null,
+        "uplink": true
+      },
+      "wifiRssi": -55,
+      "imu": true,
+      "armed": null,
+      "inputs": null,
+      "configVersion": null,
+      "safety": null,
+      "mode": null,
+      "mixEnabled": null,
+      "outputs": {},
+      "validity": {
+        "imu": "valid",
+        "attitude": "valid",
+        "imuCalibration": "unknown",
+        "aircraftBattery": "valid",
+        "transmitterBattery": "unknown",
+        "uart": "unknown",
+        "linearAcceleration": "unsupported",
+        "navigation": "not_installed",
+        "safety": "unsupported",
+        "inputs": "unsupported"
+      }
+    },
+    "capabilities": {
+      "schemaVersion": 1,
+      "deviceId": "FD-001",
+      "bootId": "esp-test-fixture",
+      "firmware": {
+        "nano": "Unknown",
+        "node": "flight-deck-node/1.0.0"
+      },
+      "features": {
+        "attitude": true,
+        "relativeYaw": false,
+        "linearAcceleration": false,
+        "gps": false,
+        "airspeed": false,
+        "barometer": false,
+        "stabilization": false,
+        "autopilot": false,
+        "servoFeedback": false,
+        "flightMixTransitions": false,
+        "transmitterBuzzerConfig": false,
+        "parachute": false,
+        "parachuteFeedback": false,
+        "flightFailureDetection": false,
+        "takeoffReadiness": false
+      },
+      "commands": [],
+      "maintenance": {
+        "authorized": false,
+        "expiresAt": 0
+      },
+      "units": {
+        "acceleration": "m/s2",
+        "angularVelocity": "deg/s",
+        "attitude": "deg",
+        "voltage": "V",
+        "pwm": "us"
+      }
+    }
+  },
+  {
+    "frame": {
+      "schemaVersion": 1,
+      "source": "LIVE",
+      "deviceId": "FD-001",
+      "bootId": "esp-test-fixture",
+      "seq": 4,
+      "uptimeMs": 1600,
+      "receivedAt": 0,
+      "sampledAt": 1789171200000,
+      "attitude": {
+        "pitch": 0,
+        "roll": 0,
+        "yaw": null
+      },
+      "accel": {
+        "x": 0,
+        "y": 0,
+        "z": -9.806650162
+      },
+      "gyro": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "linearAcceleration": null,
+      "chipTemp": 31.5,
+      "sampleHz": 90,
+      "aircraftVoltage": null,
+      "transmitterVoltage": null,
+      "radio": null,
+      "links": {
+        "uart": true,
+        "wifi": true,
+        "radio": true,
+        "uplink": true
+      },
+      "wifiRssi": -55,
+      "imu": true,
+      "armed": null,
+      "inputs": null,
+      "configVersion": null,
+      "safety": null,
+      "mode": "Manual RC",
+      "mixEnabled": true,
+      "outputs": {
+        "leftAileron": {
+          "pwm": 1500,
+          "normalized": null,
+          "saturated": null
+        },
+        "rightAileron": {
+          "pwm": 1500,
+          "normalized": null,
+          "saturated": null
+        },
+        "elevator": {
+          "pwm": 1500,
+          "normalized": null,
+          "saturated": null
+        },
+        "rudder": {
+          "pwm": 1500,
+          "normalized": null,
+          "saturated": null
+        },
+        "throttle": {
+          "pwm": 1000,
+          "normalized": null,
+          "saturated": null
+        }
+      },
+      "validity": {
+        "imu": "valid",
+        "attitude": "valid",
+        "imuCalibration": "unknown",
+        "aircraftBattery": "unknown",
+        "transmitterBattery": "unknown",
+        "uart": "valid",
+        "linearAcceleration": "unsupported",
+        "navigation": "not_installed",
+        "safety": "unsupported",
+        "inputs": "unsupported"
+      }
+    },
+    "capabilities": {
+      "schemaVersion": 1,
+      "deviceId": "FD-001",
+      "bootId": "esp-test-fixture",
+      "firmware": {
+        "nano": "UART v1; build version not reported",
+        "node": "flight-deck-node/1.0.0"
+      },
+      "features": {
+        "attitude": true,
+        "relativeYaw": false,
+        "linearAcceleration": false,
+        "gps": false,
+        "airspeed": false,
+        "barometer": false,
+        "stabilization": false,
+        "autopilot": false,
+        "servoFeedback": false,
+        "flightMixTransitions": false,
+        "transmitterBuzzerConfig": false,
+        "parachute": false,
+        "parachuteFeedback": false,
+        "flightFailureDetection": false,
+        "takeoffReadiness": false
+      },
+      "commands": [],
+      "maintenance": {
+        "authorized": false,
+        "expiresAt": 0
+      },
+      "units": {
+        "acceleration": "m/s2",
+        "angularVelocity": "deg/s",
+        "attitude": "deg",
+        "voltage": "V",
+        "pwm": "us"
+      }
+    }
+  }
+]

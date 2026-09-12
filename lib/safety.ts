@@ -16,7 +16,7 @@ export const safetySchema=z.object({
 export type SafetyReport=z.infer<typeof safetySchema>;
 export const preflightKeys=['battery','surfaces','mixing','orientation','mechanical','failsafe'] as const;
 export const checklistComplete=(s:Settings)=>preflightKeys.every(k=>s.preflight[k]===true);
-export const freshFrame=(f:Frame,now:number)=>f.receivedAt>0&&now>=f.receivedAt&&now-f.receivedAt<=2000;
+export const freshFrame=(f:Frame,now:number)=>f.receivedAt>0&&now>=f.receivedAt&&now-Math.min(f.receivedAt,f.sampledAt??f.receivedAt)<=2000;
 
 export function sanitizeSafety(f:Frame,c:Capabilities|null):SafetyReport|null {
   if(!f.safety||!c||c.deviceId!==f.deviceId||c.bootId!==f.bootId||f.validity.safety!=='valid'||f.links.uart!==true||['invalid','unknown','unsupported','not_installed'].includes(f.validity.uart))return null;

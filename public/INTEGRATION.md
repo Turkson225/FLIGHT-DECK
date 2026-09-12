@@ -2,6 +2,12 @@
 
 This release implements an engineering dashboard and telemetry gateway boundary. It does **not** include aircraft control firmware, a validated autopilot or a live actuator transport. All live command requests are rejected and audited. Do not infer flight readiness from a successful demo.
 
+## Combined NodeMCU monitoring client
+
+[Connect the NodeMCU](./NODEMCU_SETUP.html) using the included [firmware](./NODEMCU_README.md). It reads the MPU6050, calibrated voltage and the existing Nano v1 binary UART at 38400 baud. It sends HTTPS telemetry through the MiFi to Supabase, with no browser command receiver. Existing Nano sketches stay in place. The full setup guide documents credentials, upload, mounting, ADC validation and local diagnostics.
+
+The optional `sampledAt` field is UTC capture time. Ingestion replaces `receivedAt` with server time and rejects captures older than 2 seconds or more than 5 seconds ahead. Display freshness uses the older capture/receive time. This is freshness checking, not measured one-way latency. A PWM-only output uses `normalized:null` and `saturated:null`; the browser shows microseconds without inventing surface angles. Update both deployed function bundles before connecting this firmware.
+
 ## Responsibilities
 
 - Transmitter Nano samples four joystick axes, two potentiometers, throttle slider, four buttons and its battery. It sends compact radio packets and drives its own buzzer.

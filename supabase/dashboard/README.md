@@ -49,6 +49,10 @@ Replace the editor contents of both existing functions with the latest generated
 
 GitHub Pages deploys the frontend only; pushing this repository does **not** redeploy Supabase functions. Voice settings and simulator controls work immediately in the browser. Real safety reports require these function updates plus onboard firmware. Live actuator dispatch remains disabled after updating.
 
+## Updating for NodeMCU live telemetry
+
+Redeploy both bundles for optional `sampledAt` timestamps and PWM-only output fields (`normalized:null`, `saturated:null`). The ingestion function rejects capture timestamps older than 2 seconds or more than 5 seconds ahead; the browser uses capture age when deciding freshness. No SQL migration is required. Set the three device secrets above and install the [combined NodeMCU client](../../firmware/FlightDeck_Node_Live/README.md). GitHub Pages does not redeploy these functions.
+
 ## Maintaining these files
 
 Edit the canonical code under `supabase/functions` and `lib`, then run:
