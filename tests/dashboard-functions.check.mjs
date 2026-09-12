@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import {z} from 'zod';
+import {simulate,defaultSettings,demoCapabilities} from '../lib/flight.ts';
 
 const userId='10000000-0000-4000-8000-000000000001';
 const otherId='20000000-0000-4000-8000-000000000002';
@@ -26,7 +27,7 @@ async function load(name,{role='owner',verified=true,validToken=true,env={}}={})
     async rpc(name,parameters){writes.push({rpc:name,parameters});return {data:true,error:null}}
   };
   const variables={SUPABASE_URL:'https://example.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'test-only',ALLOWED_ORIGINS:origin,...env};
-  const context=vm.createContext({Request,Response,URL,TextEncoder,crypto:globalThis.crypto,Uint8Array,console,Deno:{env:{get:key=>variables[key]},serve:fn=>{handler=fn}}});
+  const context=vm.createContext({Request,Response,URL,TextEncoder,structuredClone,crypto:globalThis.crypto,Uint8Array,console,Deno:{env:{get:key=>variables[key]},serve:fn=>{handler=fn}}});
   const module=new vm.SourceTextModule(await readFile(new URL(`../supabase/dashboard/${name}.ts`,import.meta.url),'utf8'),{context});
   await module.link(specifier=>{
     if(specifier==='npm:@supabase/supabase-js@2.116.0')return new vm.SyntheticModule(['createClient'],function(){this.setExport('createClient',()=>client)},{context});
@@ -104,4 +105,30 @@ test('ingest validates telemetry before database access',async()=>{
   const request=new Request('https://example.supabase.co/functions/v1/telemetry-ingest',{method:'POST',headers:{'x-device-token':token},body:'{}'});
   assert.equal((await handler(request)).status,400);
   assert.equal(writes.length,0);
+});
+test('parachute requests never dispatch in any environment, including after expiry',async()=>{
+ for(const environment of ['DEMO','LIVE','REPLAY'])for(const expired of [true,false]){
+  const {handler,writes}=await load('flight-api');
+  const command={schemaVersion:1,id:crypto.randomUUID(),aircraftId:'FD-001',environment,kind:'parachute.deploy',parameters:{guardConfirmed:true},expiresAt:Date.now()+(expired?-5000:5000),issuer:'spoofed'};
+  const result=await (await handler(browserRequest({resource:'commands',method:'POST',body:command}))).json();
+  assert.equal(result.status,422);assert.equal(result.data.sent,false);assert.equal(result.data.status,'Rejected');
+  assert.equal(writes.length,1);assert.equal(writes[0].data.payload.issuer,userId);assert.equal(writes[0].data.payload.sent,false);
+ }
+});
+test('Viewer cannot submit a parachute request or create its audit',async()=>{
+ const {handler,writes}=await load('flight-api',{role:'viewer'});
+ const command={schemaVersion:1,id:crypto.randomUUID(),aircraftId:'FD-001',environment:'LIVE',kind:'parachute.deploy',parameters:{},expiresAt:Date.now()+5000};
+ assert.equal((await handler(browserRequest({resource:'commands',method:'POST',body:command}))).status,403);assert.equal(writes.length,0);
+});
+test('deployed ingress accepts safety telemetry and suppresses unverified deployment claims',async()=>{
+ for(const feedback of [true,false]){
+  const token='a'.repeat(64),{handler,writes}=await load('telemetry-ingest',{env:{DEVICE_SHARED_TOKEN:token,DEVICE_ID:'FD-001',DEVICE_WORKSPACE_ID:userId}});
+  const frame={...simulate(1,'failure',defaultSettings,1000),source:'LIVE'};
+  frame.safety.parachute.state='deployed';
+  const capabilities=structuredClone(demoCapabilities);capabilities.features.parachuteFeedback=feedback;
+  const request=new Request('https://example.supabase.co/functions/v1/telemetry-ingest',{method:'POST',headers:{'x-device-token':token},body:JSON.stringify({frame,capabilities})});
+  assert.equal((await handler(request)).status,200);
+  const clean=writes[0].parameters.f;assert.equal(clean.safety.parachute.state,feedback?'deployed':'unknown');assert.equal(clean.safety.flightFailure,true);
+  assert.ok(clean.receivedAt>frame.receivedAt);assert.equal(writes[0].rpc,'fd_ingest');
+ }
 });

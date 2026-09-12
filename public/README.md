@@ -12,6 +12,8 @@ A React + TypeScript fixed-wing engineering console, hosted as a static GitHub P
 - Supabase Postgres membership and protected records, private Storage recordings and Edge Functions with authenticated Owner/Operator/Viewer enforcement.
 - Cruise/Takeoff/Smooth landing **surface presets**: configurable angles, travel references, smoothstep transitions, bounded angular rate and per-servo PWM limits. These are not automatic flight controllers.
 - Startup visual inspection simulator: five seconds after simulated power-up, four-surface sweep, neutral return, explicit maintenance gates, abort and ESC exclusion.
+- Guarded parachute DEMO deployment, one-shot latch/reset, recovery telemetry and recording audit. Live recovery dispatch remains disabled.
+- Browser voice announcements with per-browser voice/volume/rate/category settings, explicit enable, priority, deduplication, expiry, captions and replay isolation.
 - Nonblocking C++ startup reference, with no pin writes, plus radio/UART contracts and the original wiring references.
 - GitHub Actions build/test/deployment workflow. Existing Sites data is not automatically migrated.
 
@@ -39,6 +41,8 @@ Sessions capture only browser-received samples, up to 18,000 per recording. Reco
 
 ## Validation
 
-38 automated TypeScript-model tests pass: missing telemetry, mixing/limits, command guards, export fidelity, event contracts, gradual transitions and startup timing/interlocks. A host-compiled C++ check covers startup delay, sweep, skip and pilot override. The static production build passes. Supabase migration/RLS/function deployment, actual email delivery and end-to-end signed-in persistence require a configured project and are not yet verified. No hardware-in-loop or mobile-device validation is claimed.
+50 automated TypeScript-model tests cover: missing telemetry, mixing/limits, command guards, export fidelity, event contracts, gradual transitions startup timing/interlocks, parachute guards and speech transitions/queue behavior. Fourteen packaged-backend checks cover verified membership, Viewer access, rejected commands and safety telemetry sanitization. A host-compiled C++ check covers startup delay, sweep, skip and pilot override. The static production build passes. A configured Supabase project is required for signed-in persistence. After this contract update, redeploy both functions using [the dashboard guide](https://github.com/Turkson225/FLIGHT-DECK/blob/main/supabase/dashboard/README.md). No hardware-in-loop or audible playback on the operator device is claimed.
 
-See [hardware and telemetry integration](./public/INTEGRATION.md).
+Open **Recovery & voice** to enable announcements and practice deployment. Browser voice requires a working OS/browser speech engine and an explicit gesture after page load.
+
+See [hardware and telemetry integration](./INTEGRATION.md).

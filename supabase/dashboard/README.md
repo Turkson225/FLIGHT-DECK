@@ -43,6 +43,12 @@ Until a device credential is provisioned, this endpoint deliberately rejects all
 
 Provision the same token in the aircraft client or trusted gateway. Keep it out of GitHub and browser configuration. See [the hardware integration guide](../../public/INTEGRATION.md) for the telemetry contract. Browser login and saved settings do not require a device token.
 
+## Updating for recovery and voice
+
+Replace the editor contents of both existing functions with the latest generated `flight-api.ts` and `telemetry-ingest.ts`, then deploy each. Keep their existing secrets and documented authentication configuration. No database migration, SMTP change, or new API key is needed for this update. This allows the optional safety report and new parachute simulator audit to survive validation when telemetry and recordings are saved. Older deployed validators can strip the new fields or reject a recording containing its new audit kind.
+
+GitHub Pages deploys the frontend only; pushing this repository does **not** redeploy Supabase functions. Voice settings and simulator controls work immediately in the browser. Real safety reports require these function updates plus onboard firmware. Live actuator dispatch remains disabled after updating.
+
 ## Maintaining these files
 
 Edit the canonical code under `supabase/functions` and `lib`, then run:

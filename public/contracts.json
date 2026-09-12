@@ -117,10 +117,11 @@
             "mixer.configure",
             "imu.calibrate",
             "aux.move",
-            "motor.test"
+            "motor.test",
+            "parachute.deploy"
           ]
         },
-        "maxItems": 5
+        "maxItems": 6
       },
       "maintenance": {
         "type": "object",
@@ -278,7 +279,8 @@
           "mixer.configure",
           "imu.calibrate",
           "aux.move",
-          "motor.test"
+          "motor.test",
+          "parachute.deploy"
         ]
       },
       "parameters": {
@@ -318,90 +320,168 @@
     "additionalProperties": false
   },
   "demoAuditSchema": {
-    "type": "object",
-    "properties": {
-      "id": {
-        "type": "string",
-        "format": "uuid"
-      },
-      "aircraftId": {
-        "type": "string",
-        "minLength": 1,
-        "maxLength": 80,
-        "pattern": "^[A-Za-z0-9_-]+$"
-      },
-      "issuer": {
-        "type": "string",
-        "minLength": 1,
-        "maxLength": 150
-      },
-      "environment": {
-        "const": "DEMO"
-      },
-      "kind": {
-        "const": "servo.test"
-      },
-      "parameters": {
+    "anyOf": [
+      {
         "type": "object",
         "properties": {
-          "axis": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "aircraftId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "issuer": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          },
+          "environment": {
+            "const": "DEMO"
+          },
+          "kind": {
+            "const": "servo.test"
+          },
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "axis": {
+                "type": "string",
+                "enum": [
+                  "leftAileron",
+                  "rightAileron",
+                  "elevator",
+                  "rudder"
+                ]
+              },
+              "value": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "axis",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "createdAt": {
+            "type": "number",
+            "minimum": 0
+          },
+          "expiresAt": {
+            "type": "number",
+            "minimum": 0
+          },
+          "status": {
             "type": "string",
             "enum": [
-              "leftAileron",
-              "rightAileron",
-              "elevator",
-              "rudder"
+              "Applied (simulator)",
+              "Rejected"
             ]
           },
-          "value": {
-            "type": "number",
-            "minimum": -1,
-            "maximum": 1
+          "reason": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "sent": {
+            "const": false
           }
         },
         "required": [
-          "axis",
-          "value"
+          "id",
+          "aircraftId",
+          "issuer",
+          "environment",
+          "kind",
+          "parameters",
+          "createdAt",
+          "expiresAt",
+          "status",
+          "reason",
+          "sent"
         ],
         "additionalProperties": false
       },
-      "createdAt": {
-        "type": "number",
-        "minimum": 0
-      },
-      "expiresAt": {
-        "type": "number",
-        "minimum": 0
-      },
-      "status": {
-        "type": "string",
-        "enum": [
-          "Applied (simulator)",
-          "Rejected"
-        ]
-      },
-      "reason": {
-        "type": "string",
-        "maxLength": 500
-      },
-      "sent": {
-        "const": false
+      {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "aircraftId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "issuer": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          },
+          "environment": {
+            "const": "DEMO"
+          },
+          "kind": {
+            "const": "parachute.deploy"
+          },
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "guardConfirmed": {
+                "const": true
+              }
+            },
+            "required": [
+              "guardConfirmed"
+            ],
+            "additionalProperties": false
+          },
+          "createdAt": {
+            "type": "number",
+            "minimum": 0
+          },
+          "expiresAt": {
+            "type": "number",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Applied (simulator)",
+              "Rejected"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "sent": {
+            "const": false
+          }
+        },
+        "required": [
+          "id",
+          "aircraftId",
+          "issuer",
+          "environment",
+          "kind",
+          "parameters",
+          "createdAt",
+          "expiresAt",
+          "status",
+          "reason",
+          "sent"
+        ],
+        "additionalProperties": false
       }
-    },
-    "required": [
-      "id",
-      "aircraftId",
-      "issuer",
-      "environment",
-      "kind",
-      "parameters",
-      "createdAt",
-      "expiresAt",
-      "status",
-      "reason",
-      "sent"
-    ],
-    "additionalProperties": false
+    ]
   },
   "eventSchema": {
     "type": "object",
@@ -1333,90 +1413,168 @@
         "additionalProperties": false
       },
       "command": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "aircraftId": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 80,
-            "pattern": "^[A-Za-z0-9_-]+$"
-          },
-          "issuer": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 150
-          },
-          "environment": {
-            "const": "DEMO"
-          },
-          "kind": {
-            "const": "servo.test"
-          },
-          "parameters": {
+        "anyOf": [
+          {
             "type": "object",
             "properties": {
-              "axis": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "aircraftId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "issuer": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 150
+              },
+              "environment": {
+                "const": "DEMO"
+              },
+              "kind": {
+                "const": "servo.test"
+              },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "axis": {
+                    "type": "string",
+                    "enum": [
+                      "leftAileron",
+                      "rightAileron",
+                      "elevator",
+                      "rudder"
+                    ]
+                  },
+                  "value": {
+                    "type": "number",
+                    "minimum": -1,
+                    "maximum": 1
+                  }
+                },
+                "required": [
+                  "axis",
+                  "value"
+                ],
+                "additionalProperties": false
+              },
+              "createdAt": {
+                "type": "number",
+                "minimum": 0
+              },
+              "expiresAt": {
+                "type": "number",
+                "minimum": 0
+              },
+              "status": {
                 "type": "string",
                 "enum": [
-                  "leftAileron",
-                  "rightAileron",
-                  "elevator",
-                  "rudder"
+                  "Applied (simulator)",
+                  "Rejected"
                 ]
               },
-              "value": {
-                "type": "number",
-                "minimum": -1,
-                "maximum": 1
+              "reason": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "sent": {
+                "const": false
               }
             },
             "required": [
-              "axis",
-              "value"
+              "id",
+              "aircraftId",
+              "issuer",
+              "environment",
+              "kind",
+              "parameters",
+              "createdAt",
+              "expiresAt",
+              "status",
+              "reason",
+              "sent"
             ],
             "additionalProperties": false
           },
-          "createdAt": {
-            "type": "number",
-            "minimum": 0
-          },
-          "expiresAt": {
-            "type": "number",
-            "minimum": 0
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "Applied (simulator)",
-              "Rejected"
-            ]
-          },
-          "reason": {
-            "type": "string",
-            "maxLength": 500
-          },
-          "sent": {
-            "const": false
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "aircraftId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "issuer": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 150
+              },
+              "environment": {
+                "const": "DEMO"
+              },
+              "kind": {
+                "const": "parachute.deploy"
+              },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "guardConfirmed": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "guardConfirmed"
+                ],
+                "additionalProperties": false
+              },
+              "createdAt": {
+                "type": "number",
+                "minimum": 0
+              },
+              "expiresAt": {
+                "type": "number",
+                "minimum": 0
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "Applied (simulator)",
+                  "Rejected"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "sent": {
+                "const": false
+              }
+            },
+            "required": [
+              "id",
+              "aircraftId",
+              "issuer",
+              "environment",
+              "kind",
+              "parameters",
+              "createdAt",
+              "expiresAt",
+              "status",
+              "reason",
+              "sent"
+            ],
+            "additionalProperties": false
           }
-        },
-        "required": [
-          "id",
-          "aircraftId",
-          "issuer",
-          "environment",
-          "kind",
-          "parameters",
-          "createdAt",
-          "expiresAt",
-          "status",
-          "reason",
-          "sent"
-        ],
-        "additionalProperties": false
+        ]
       },
       "id": {
         "type": "string",
@@ -1468,6 +1626,117 @@
   "frameSchema": {
     "type": "object",
     "properties": {
+      "safety": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "const": 1
+              },
+              "flightFailure": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "failureReason": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 250
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "readyForTakeoff": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "parachute": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "installed": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "ready": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "state": {
+                        "type": "string",
+                        "enum": [
+                          "unknown",
+                          "stowed",
+                          "released",
+                          "deployed",
+                          "fault"
+                        ]
+                      },
+                      "feedback": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "release_sensor",
+                          "deployment_sensor"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "installed",
+                      "ready",
+                      "state",
+                      "feedback"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "flightFailure",
+              "failureReason",
+              "readyForTakeoff",
+              "parachute"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
       "schemaVersion": {
         "const": 1
       },
@@ -2247,6 +2516,117 @@
         "items": {
           "type": "object",
           "properties": {
+            "safety": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "schemaVersion": {
+                      "const": 1
+                    },
+                    "flightFailure": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "failureReason": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 250
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "readyForTakeoff": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "parachute": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "installed": {
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "ready": {
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "state": {
+                              "type": "string",
+                              "enum": [
+                                "unknown",
+                                "stowed",
+                                "released",
+                                "deployed",
+                                "fault"
+                              ]
+                            },
+                            "feedback": {
+                              "type": "string",
+                              "enum": [
+                                "none",
+                                "release_sensor",
+                                "deployment_sensor"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "installed",
+                            "ready",
+                            "state",
+                            "feedback"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "schemaVersion",
+                    "flightFailure",
+                    "failureReason",
+                    "readyForTakeoff",
+                    "parachute"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "schemaVersion": {
               "const": 1
             },
@@ -3878,90 +4258,168 @@
               "additionalProperties": false
             },
             "command": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                "aircraftId": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 80,
-                  "pattern": "^[A-Za-z0-9_-]+$"
-                },
-                "issuer": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 150
-                },
-                "environment": {
-                  "const": "DEMO"
-                },
-                "kind": {
-                  "const": "servo.test"
-                },
-                "parameters": {
+              "anyOf": [
+                {
                   "type": "object",
                   "properties": {
-                    "axis": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "aircraftId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 80,
+                      "pattern": "^[A-Za-z0-9_-]+$"
+                    },
+                    "issuer": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 150
+                    },
+                    "environment": {
+                      "const": "DEMO"
+                    },
+                    "kind": {
+                      "const": "servo.test"
+                    },
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "axis": {
+                          "type": "string",
+                          "enum": [
+                            "leftAileron",
+                            "rightAileron",
+                            "elevator",
+                            "rudder"
+                          ]
+                        },
+                        "value": {
+                          "type": "number",
+                          "minimum": -1,
+                          "maximum": 1
+                        }
+                      },
+                      "required": [
+                        "axis",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "createdAt": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "expiresAt": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "status": {
                       "type": "string",
                       "enum": [
-                        "leftAileron",
-                        "rightAileron",
-                        "elevator",
-                        "rudder"
+                        "Applied (simulator)",
+                        "Rejected"
                       ]
                     },
-                    "value": {
-                      "type": "number",
-                      "minimum": -1,
-                      "maximum": 1
+                    "reason": {
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    "sent": {
+                      "const": false
                     }
                   },
                   "required": [
-                    "axis",
-                    "value"
+                    "id",
+                    "aircraftId",
+                    "issuer",
+                    "environment",
+                    "kind",
+                    "parameters",
+                    "createdAt",
+                    "expiresAt",
+                    "status",
+                    "reason",
+                    "sent"
                   ],
                   "additionalProperties": false
                 },
-                "createdAt": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "expiresAt": {
-                  "type": "number",
-                  "minimum": 0
-                },
-                "status": {
-                  "type": "string",
-                  "enum": [
-                    "Applied (simulator)",
-                    "Rejected"
-                  ]
-                },
-                "reason": {
-                  "type": "string",
-                  "maxLength": 500
-                },
-                "sent": {
-                  "const": false
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "aircraftId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 80,
+                      "pattern": "^[A-Za-z0-9_-]+$"
+                    },
+                    "issuer": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 150
+                    },
+                    "environment": {
+                      "const": "DEMO"
+                    },
+                    "kind": {
+                      "const": "parachute.deploy"
+                    },
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "guardConfirmed": {
+                          "const": true
+                        }
+                      },
+                      "required": [
+                        "guardConfirmed"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "createdAt": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "expiresAt": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "Applied (simulator)",
+                        "Rejected"
+                      ]
+                    },
+                    "reason": {
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    "sent": {
+                      "const": false
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "aircraftId",
+                    "issuer",
+                    "environment",
+                    "kind",
+                    "parameters",
+                    "createdAt",
+                    "expiresAt",
+                    "status",
+                    "reason",
+                    "sent"
+                  ],
+                  "additionalProperties": false
                 }
-              },
-              "required": [
-                "id",
-                "aircraftId",
-                "issuer",
-                "environment",
-                "kind",
-                "parameters",
-                "createdAt",
-                "expiresAt",
-                "status",
-                "reason",
-                "sent"
-              ],
-              "additionalProperties": false
+              ]
             },
             "id": {
               "type": "string",
@@ -4937,6 +5395,110 @@
     ],
     "additionalProperties": false,
     "description": "Additional cross-field validation is enforced by the runtime schema."
+  },
+  "safetySchema": {
+    "type": "object",
+    "properties": {
+      "schemaVersion": {
+        "const": 1
+      },
+      "flightFailure": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "failureReason": {
+        "anyOf": [
+          {
+            "type": "string",
+            "maxLength": 250
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "readyForTakeoff": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "parachute": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "installed": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "ready": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "unknown",
+                  "stowed",
+                  "released",
+                  "deployed",
+                  "fault"
+                ]
+              },
+              "feedback": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "release_sensor",
+                  "deployment_sensor"
+                ]
+              }
+            },
+            "required": [
+              "installed",
+              "ready",
+              "state",
+              "feedback"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "schemaVersion",
+      "flightFailure",
+      "failureReason",
+      "readyForTakeoff",
+      "parachute"
+    ],
+    "additionalProperties": false
   },
   "settingsSchema": {
     "type": "object",

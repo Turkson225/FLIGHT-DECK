@@ -78,3 +78,9 @@ Use **Flight modes & startup** to configure angles. All presets initially use ze
 - Confirm DEMO/REPLAY cannot send actuator commands. This release has no live dispatcher.
 
 Official references: [Supabase email OTP](https://supabase.com/docs/guides/auth/auth-email-passwordless), [email templates](https://supabase.com/docs/guides/auth/auth-email-templates), [custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Edge Function authentication](https://supabase.com/docs/guides/functions/auth), [GitHub Pages workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
+
+## Recovery and voice update
+
+Refresh the deployed site and open **Recovery & voice**. The guarded simulator and browser voice controls need no additional service. Click **Enable voice**, then **Test voice** on the operator device; resume audio after reloading.
+
+For the new safety telemetry and saved parachute simulation audits, redeploy both existing Edge Functions from the latest generated files as described in [the dashboard deployment guide](https://github.com/Turkson225/FLIGHT-DECK/blob/main/supabase/dashboard/README.md#updating-for-recovery-and-voice). No new SQL migration or SMTP configuration is required. Live parachute control remains disabled pending a separate onboard implementation and validation.

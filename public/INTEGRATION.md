@@ -35,6 +35,57 @@ Future Nano firmware must select the mode locally via the physical transmitter, 
 
 Startup preview requires the Stationary scenario and explicit simulated maintenance authorization. It waits five seconds, sweeps four surfaces over eight seconds, then returns to neutral. The ESC is excluded. `integration/startup_inspection.h` is a nonblocking reference state machine with no pin writes. It checks configured/disarmed/throttle-low/stationary/local-authorized/fresh-radio gates, skips a missed startup window, aborts on pilot override or loop stalls, and never restarts after failure until a new MCU boot. Integrate and test it on the Nano; creating a dashboard setting does not install firmware. Local authorization must originate on the aircraft. Power cycling with unknown arm state must not trigger movement.
 
+## Parachute recovery and safety reports
+
+The persistent **Parachute** button opens a protective cover and confirmation dialog. In DEMO it applies a one-shot simulated deployment and creates an event with command ID, aircraft ID, issuer, parameters, creation/expiry times, `sent:false`, and `Applied (simulator)` status. Reset is explicit. Switching environment/aircraft resets the simulator guard. No live endpoint is called by this workflow. REPLAY cannot activate it. The visualization reports status only; it does not simulate canopy dynamics, descent, motor shutdown, or a safe recovery.
+
+LIVE parachute dispatch remains **disabled on the server and in the UI**, even for Owner and even if firmware advertises support. The command contract reserves `parachute.deploy`; direct requests are rejected and audited, including expired requests. The generic bench gate explicitly rejects this command. There is no dispatch queue or reconnect resend.
+
+Hardware and firmware work is still required: a suitable recovery mechanism and electrical interface; an independently usable transmitter action; aircraft-specific deployment conditions and pilot authority; deliberate activation protection; a single-use deployment latch; independent power/fault handling; local duplicate/expiration checks; and deployment feedback where available. Define and test this on the airframe before enabling any live transport. No output pin, release angle, failure threshold, or automatic deployment rule is supplied or enabled by this website. In particular, D7 is not assigned to a parachute.
+
+Safety telemetry is an optional, additive extension to the v1 frame:
+
+```json
+{
+  "validity": { "safety": "valid" },
+  "safety": {
+    "schemaVersion": 1,
+    "flightFailure": null,
+    "failureReason": null,
+    "readyForTakeoff": null,
+    "parachute": {
+      "installed": true,
+      "ready": false,
+      "state": "stowed",
+      "feedback": "none"
+    }
+  }
+}
+```
+
+This is a fragment, not a complete ingestion payload. Keep the usual frame/device/boot/sequence/uptime/source envelope. Supported capability feature names are `flightFailureDetection`, `takeoffReadiness`, `parachute`, and `parachuteFeedback`. Report only capabilities the installed implementation actually supplies; omit the safety extension or use null when unavailable. The simulator advertises these features only for simulated data.
+
+Safety values require matching device and boot IDs, `validity.safety = valid`, and healthy Nano UART. Source sensors must be fresh before the device marks the snapshot valid. After two seconds without a fresh frame the browser labels the report stale and cannot treat it as current readiness. Unsupported failure/readiness fields become null at ingestion. `parachute.state` is `unknown`, `stowed`, `released`, `deployed`, or `fault`; `feedback` is `none`, `release_sensor`, or `deployment_sensor`. A `deployed` claim without the feedback capability and deployment sensor is sanitized to `unknown`. `released` does not confirm that the parachute opened. A motor/servo acknowledgment never proves physical deployment.
+
+Fresh failure reports create a critical visual event. Merely losing radio, UART, browser or internet connectivity does not establish that the aircraft failed. The browser cannot guarantee delivery of an emergency request, especially during the link failure it is warning about. Local RC control, release logic and failsafes must function without the browser or MiFi.
+
+Existing recordings remain readable. New JSON recordings preserve the safety extension and guarded DEMO audit. CSV adds `flight_failure_reported`, `parachute_state`, and `parachute_feedback`, leaving missing fields empty. DEMO replay can display its simulated recovery state; old LIVE recordings without accompanying firmware capabilities cannot establish current recovery support.
+
+## Browser voice announcements
+
+Open **Recovery & voice → Enable voice**. Select a system voice, volume, speaking rate and categories; **Test voice** and phrase previews exercise browser speech. **Mute voice** cancels current/queued announcements. **Stop speaking** clears speech now but leaves future alerts enabled. Preferences are saved per browser in `flightdeck-voice-v1`, independently of workspace settings and the transmitter buzzer. A fresh page requires a user gesture to resume audio. No microphone permission is needed. Installed voices and audible playback depend on the browser/OS; some system voices may use their own online service. See [MDN SpeechSynthesis](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis).
+
+Announcements cover link loss/restoration, aircraft/transmitter low or critical voltage, IMU loss/restoration, an explicit reported flight failure, preflight readiness, parachute release/deployment/fault, session recording, and rejected commands. Text is selected from fixed application phrases; arbitrary firmware messages are not spoken.
+
+- Every automatic DEMO phrase starts with “Demo.” Explicit preview phrases start with “Voice preview.” Automatic replay speech is disabled.
+- Lost telemetry means “Aircraft telemetry connection lost. Aircraft condition unknown.” Initial offline waiting does not fabricate a previously connected aircraft.
+- “Flight failure reported” requires a fresh, valid report and explicit firmware capability. Link loss and MPU6050 attitude alone cannot generate it.
+- Completed operator checks without the full readiness gates say “Operator checklist complete. Aircraft readiness not confirmed.”
+- “Preflight complete. Ready for takeoff” requires explicit supported firmware readiness and no reported failure, all six operator checks, fresh telemetry, healthy radio/UART/Wi-Fi/uplink and IMU, low throttle, a known disarmed state, and both batteries above warning thresholds. An installed reported parachute must be stowed and ready. This phrase conveys the configured checks; it is not independent certification of airworthiness.
+- Alerts are edge-triggered with a 15-second per-message repeat limit. Critical notices interrupt routine speech. The waiting queue is bounded to four items; stale (over eight seconds), resolved and environment-mismatched notices are discarded. Scope changes and muting cancel queued speech.
+
+To try readiness: select **Stationary aircraft**, enable voice, then complete the six operator checks on Preflight. To try a failure: select **Reported flight failure**. Radio/UART/Internet/IMU and Battery scenarios exercise the other messages. A browser with no working speech engine shows a visible error and retains announcement captions/history; test audible delivery on the actual operator device. Closed, sleeping or suspended browsers cannot provide dependable alerts. Voice is supplementary to visible warnings and onboard protection.
+
 ## Compact radio proposal
 
 `integration/radio_packet.h` documents a 24-byte little-endian packet: version and flags; 16-bit sequence/boot; four signed joystick axes; unsigned throttle; two signed pots; transmitter millivolts; button bitmap and reserved byte. Signed controls use −1000…1000; throttle uses 0…1000; unavailable voltage uses 0xffff. nRF24's hardware CRC is not authentication. Pairing, address, RF channel/data rate, power, interference handling and radio security are separate firmware design work. Never send web JSON over nRF24.
