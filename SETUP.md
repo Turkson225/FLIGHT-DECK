@@ -20,6 +20,8 @@ Only the publishable/anon key belongs in browser configuration. Never use a serv
 
 ## 3. Create protected data and deploy the backend
 
+For setup entirely in your browser, use the [Supabase dashboard deployment guide](https://github.com/Turkson225/FLIGHT-DECK/blob/main/supabase/dashboard/README.md). It includes one complete file per function and preserves the same authentication checks.
+
 Install the Supabase CLI from its official instructions. Authenticate locally, then:
 
 ```bash

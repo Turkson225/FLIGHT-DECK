@@ -24,6 +24,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm functions:bundle --check
+      - run: pnpm test:functions
       - run: pnpm test
       - run: pnpm build
         env:
