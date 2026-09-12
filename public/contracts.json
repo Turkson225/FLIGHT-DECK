@@ -1,0 +1,5853 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FLIGHT DECK integration contracts",
+  "schemaVersion": 1,
+  "description": "SI units in capability report; null plus validity for unavailable readings. Settings endpoint order and battery threshold refinements are enforced by lib/contracts.ts.",
+  "acknowledgmentSchema": {
+    "type": "object",
+    "properties": {
+      "schemaVersion": {
+        "const": 1
+      },
+      "commandId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "deviceId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "bootId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "sequence": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uptimeMs": {
+        "type": "number",
+        "minimum": 0
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "Accepted",
+          "Applied",
+          "Rejected",
+          "TimedOut"
+        ]
+      },
+      "reason": {
+        "anyOf": [
+          {
+            "type": "string",
+            "maxLength": 500
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "schemaVersion",
+      "commandId",
+      "deviceId",
+      "bootId",
+      "sequence",
+      "uptimeMs",
+      "status",
+      "reason"
+    ],
+    "additionalProperties": false
+  },
+  "capabilitiesSchema": {
+    "type": "object",
+    "properties": {
+      "schemaVersion": {
+        "const": 1
+      },
+      "deviceId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "bootId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "firmware": {
+        "type": "object",
+        "properties": {
+          "nano": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "node": {
+            "type": "string",
+            "maxLength": 60
+          }
+        },
+        "required": [
+          "nano",
+          "node"
+        ],
+        "additionalProperties": false
+      },
+      "features": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "boolean"
+        }
+      },
+      "commands": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "servo.test",
+            "mixer.configure",
+            "imu.calibrate",
+            "aux.move",
+            "motor.test"
+          ]
+        },
+        "maxItems": 5
+      },
+      "maintenance": {
+        "type": "object",
+        "properties": {
+          "authorized": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "authorized",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "units": {
+        "type": "object",
+        "properties": {
+          "acceleration": {
+            "const": "m/s2"
+          },
+          "angularVelocity": {
+            "const": "deg/s"
+          },
+          "attitude": {
+            "const": "deg"
+          },
+          "voltage": {
+            "const": "V"
+          },
+          "pwm": {
+            "const": "us"
+          }
+        },
+        "required": [
+          "acceleration",
+          "angularVelocity",
+          "attitude",
+          "voltage",
+          "pwm"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "schemaVersion",
+      "deviceId",
+      "bootId",
+      "firmware",
+      "features",
+      "commands",
+      "maintenance",
+      "units"
+    ],
+    "additionalProperties": false
+  },
+  "channelSchema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 60
+      },
+      "min": {
+        "type": "number",
+        "minimum": 750,
+        "maximum": 2250
+      },
+      "center": {
+        "type": "number",
+        "minimum": 750,
+        "maximum": 2250
+      },
+      "max": {
+        "type": "number",
+        "minimum": 750,
+        "maximum": 2250
+      },
+      "reverse": {
+        "type": "boolean"
+      },
+      "deadband": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 0.2
+      },
+      "trim": {
+        "type": "number",
+        "minimum": -0.3,
+        "maximum": 0.3
+      },
+      "subtrim": {
+        "type": "number",
+        "minimum": -150,
+        "maximum": 150
+      },
+      "expo": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "rate": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1.5
+      }
+    },
+    "required": [
+      "name",
+      "min",
+      "center",
+      "max",
+      "reverse",
+      "deadband",
+      "trim",
+      "subtrim",
+      "expo",
+      "rate"
+    ],
+    "additionalProperties": false,
+    "description": "Additional cross-field validation is enforced by the runtime schema."
+  },
+  "commandSchema": {
+    "type": "object",
+    "properties": {
+      "schemaVersion": {
+        "const": 1
+      },
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "aircraftId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "environment": {
+        "type": "string",
+        "enum": [
+          "LIVE",
+          "DEMO",
+          "REPLAY"
+        ]
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "servo.test",
+          "mixer.configure",
+          "imu.calibrate",
+          "aux.move",
+          "motor.test"
+        ]
+      },
+      "parameters": {
+        "type": "object",
+        "additionalProperties": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 100
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "expiresAt": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "schemaVersion",
+      "id",
+      "aircraftId",
+      "environment",
+      "kind",
+      "parameters",
+      "expiresAt"
+    ],
+    "additionalProperties": false
+  },
+  "demoAuditSchema": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "aircraftId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "issuer": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 150
+      },
+      "environment": {
+        "const": "DEMO"
+      },
+      "kind": {
+        "const": "servo.test"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "axis": {
+            "type": "string",
+            "enum": [
+              "leftAileron",
+              "rightAileron",
+              "elevator",
+              "rudder"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "axis",
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      "createdAt": {
+        "type": "number",
+        "minimum": 0
+      },
+      "expiresAt": {
+        "type": "number",
+        "minimum": 0
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "Applied (simulator)",
+          "Rejected"
+        ]
+      },
+      "reason": {
+        "type": "string",
+        "maxLength": 500
+      },
+      "sent": {
+        "const": false
+      }
+    },
+    "required": [
+      "id",
+      "aircraftId",
+      "issuer",
+      "environment",
+      "kind",
+      "parameters",
+      "createdAt",
+      "expiresAt",
+      "status",
+      "reason",
+      "sent"
+    ],
+    "additionalProperties": false
+  },
+  "eventSchema": {
+    "type": "object",
+    "properties": {
+      "environment": {
+        "type": "string",
+        "enum": [
+          "DEMO",
+          "LIVE",
+          "REPLAY"
+        ]
+      },
+      "aircraftId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "configuration": {
+        "type": "object",
+        "properties": {
+          "modes": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "presets": {
+                "type": "object",
+                "properties": {
+                  "cruise": {
+                    "type": "object",
+                    "properties": {
+                      "angles": {
+                        "type": "object",
+                        "properties": {
+                          "leftAileron": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "rightAileron": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "elevator": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "rudder": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          }
+                        },
+                        "required": [
+                          "leftAileron",
+                          "rightAileron",
+                          "elevator",
+                          "rudder"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "transitionSeconds": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 15
+                      }
+                    },
+                    "required": [
+                      "angles",
+                      "transitionSeconds"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "takeoff": {
+                    "type": "object",
+                    "properties": {
+                      "angles": {
+                        "type": "object",
+                        "properties": {
+                          "leftAileron": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "rightAileron": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "elevator": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "rudder": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          }
+                        },
+                        "required": [
+                          "leftAileron",
+                          "rightAileron",
+                          "elevator",
+                          "rudder"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "transitionSeconds": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 15
+                      }
+                    },
+                    "required": [
+                      "angles",
+                      "transitionSeconds"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "landing": {
+                    "type": "object",
+                    "properties": {
+                      "angles": {
+                        "type": "object",
+                        "properties": {
+                          "leftAileron": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "rightAileron": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "elevator": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "rudder": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          }
+                        },
+                        "required": [
+                          "leftAileron",
+                          "rightAileron",
+                          "elevator",
+                          "rudder"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "transitionSeconds": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 15
+                      }
+                    },
+                    "required": [
+                      "angles",
+                      "transitionSeconds"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "cruise",
+                  "takeoff",
+                  "landing"
+                ],
+                "additionalProperties": false
+              },
+              "travelDegrees": {
+                "type": "object",
+                "properties": {
+                  "leftAileron": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 45
+                  },
+                  "rightAileron": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 45
+                  },
+                  "elevator": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 45
+                  },
+                  "rudder": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 45
+                  }
+                },
+                "required": [
+                  "leftAileron",
+                  "rightAileron",
+                  "elevator",
+                  "rudder"
+                ],
+                "additionalProperties": false
+              },
+              "maxDegreesPerSecond": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 30
+              },
+              "startup": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "delaySeconds": {
+                    "const": 5
+                  },
+                  "amplitudeDegrees": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 10
+                  }
+                },
+                "required": [
+                  "enabled",
+                  "delaySeconds",
+                  "amplitudeDegrees"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "version",
+              "presets",
+              "travelDegrees",
+              "maxDegreesPerSecond",
+              "startup"
+            ],
+            "additionalProperties": false
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "units": {
+            "type": "string",
+            "enum": [
+              "g",
+              "ms2"
+            ]
+          },
+          "mounting": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "sampleHz": {
+            "anyOf": [
+              {
+                "const": 5
+              },
+              {
+                "const": 10
+              }
+            ]
+          },
+          "aircraftBattery": {
+            "type": "object",
+            "properties": {
+              "cells": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 12
+              },
+              "chemistry": {
+                "type": "string",
+                "enum": [
+                  "LiPo",
+                  "Li-ion",
+                  "Other"
+                ]
+              },
+              "warning": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 60
+              },
+              "critical": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 60
+              },
+              "scale": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 5
+              }
+            },
+            "required": [
+              "cells",
+              "chemistry",
+              "warning",
+              "critical",
+              "scale"
+            ],
+            "additionalProperties": false,
+            "description": "Additional cross-field validation is enforced by the runtime schema."
+          },
+          "transmitterBattery": {
+            "type": "object",
+            "properties": {
+              "cells": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 12
+              },
+              "chemistry": {
+                "type": "string",
+                "enum": [
+                  "LiPo",
+                  "Li-ion",
+                  "Other"
+                ]
+              },
+              "warning": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 60
+              },
+              "critical": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 60
+              },
+              "scale": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 5
+              }
+            },
+            "required": [
+              "cells",
+              "chemistry",
+              "warning",
+              "critical",
+              "scale"
+            ],
+            "additionalProperties": false,
+            "description": "Additional cross-field validation is enforced by the runtime schema."
+          },
+          "mixer": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "common": {
+                "type": "boolean"
+              },
+              "strength": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1.5
+              },
+              "differential": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 0.8
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "channels": {
+                "type": "object",
+                "properties": {
+                  "rudder": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  },
+                  "elevator": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  },
+                  "leftAileron": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  },
+                  "rightAileron": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  },
+                  "throttle": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  },
+                  "aux1": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  },
+                  "aux2": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  }
+                },
+                "required": [
+                  "rudder",
+                  "elevator",
+                  "leftAileron",
+                  "rightAileron",
+                  "throttle",
+                  "aux1",
+                  "aux2"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "enabled",
+              "common",
+              "strength",
+              "differential",
+              "version",
+              "channels"
+            ],
+            "additionalProperties": false
+          },
+          "preflight": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "calibration": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "note": {
+                  "type": "string",
+                  "maxLength": 250
+                }
+              },
+              "required": [
+                "at",
+                "note"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 30
+          },
+          "browserAudio": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "id",
+          "units",
+          "mounting",
+          "sampleHz",
+          "aircraftBattery",
+          "transmitterBattery",
+          "mixer",
+          "preflight",
+          "calibration",
+          "browserAudio"
+        ],
+        "additionalProperties": false
+      },
+      "command": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "aircraftId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "issuer": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          },
+          "environment": {
+            "const": "DEMO"
+          },
+          "kind": {
+            "const": "servo.test"
+          },
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "axis": {
+                "type": "string",
+                "enum": [
+                  "leftAileron",
+                  "rightAileron",
+                  "elevator",
+                  "rudder"
+                ]
+              },
+              "value": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "axis",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "createdAt": {
+            "type": "number",
+            "minimum": 0
+          },
+          "expiresAt": {
+            "type": "number",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Applied (simulator)",
+              "Rejected"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "sent": {
+            "const": false
+          }
+        },
+        "required": [
+          "id",
+          "aircraftId",
+          "issuer",
+          "environment",
+          "kind",
+          "parameters",
+          "createdAt",
+          "expiresAt",
+          "status",
+          "reason",
+          "sent"
+        ],
+        "additionalProperties": false
+      },
+      "id": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "at": {
+        "type": "number",
+        "minimum": 0
+      },
+      "title": {
+        "type": "string",
+        "maxLength": 120
+      },
+      "detail": {
+        "type": "string",
+        "maxLength": 1200
+      },
+      "source": {
+        "type": "string",
+        "maxLength": 60
+      },
+      "severity": {
+        "type": "string",
+        "enum": [
+          "info",
+          "warning",
+          "critical"
+        ]
+      },
+      "acknowledged": {
+        "type": "boolean"
+      },
+      "resolved": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "id",
+      "at",
+      "title",
+      "detail",
+      "source",
+      "severity",
+      "acknowledged",
+      "resolved"
+    ],
+    "additionalProperties": false
+  },
+  "frameSchema": {
+    "type": "object",
+    "properties": {
+      "schemaVersion": {
+        "const": 1
+      },
+      "source": {
+        "type": "string",
+        "enum": [
+          "DEMO",
+          "LIVE",
+          "REPLAY"
+        ]
+      },
+      "deviceId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "bootId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "seq": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uptimeMs": {
+        "type": "number",
+        "minimum": 0
+      },
+      "receivedAt": {
+        "type": "number",
+        "minimum": 0
+      },
+      "attitude": {
+        "type": "object",
+        "properties": {
+          "pitch": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "roll": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "yaw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "pitch",
+          "roll",
+          "yaw"
+        ],
+        "additionalProperties": false
+      },
+      "accel": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "z": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false
+      },
+      "gyro": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "z": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false
+      },
+      "linearAcceleration": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "x": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "y": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "z": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "chipTemp": {
+        "anyOf": [
+          {
+            "type": "number",
+            "minimum": -80,
+            "maximum": 150
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "sampleHz": {
+        "anyOf": [
+          {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 8000
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "aircraftVoltage": {
+        "anyOf": [
+          {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 65
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "transmitterVoltage": {
+        "anyOf": [
+          {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 65
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "radio": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "received": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "expected": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "retries": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "packetAge": {
+                "type": "number",
+                "minimum": 0
+              },
+              "rpd": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "received",
+              "expected",
+              "retries",
+              "packetAge",
+              "rpd"
+            ],
+            "additionalProperties": false,
+            "description": "Additional cross-field validation is enforced by the runtime schema."
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "links": {
+        "type": "object",
+        "properties": {
+          "radio": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "uart": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wifi": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "uplink": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "radio",
+          "uart",
+          "wifi",
+          "uplink"
+        ],
+        "additionalProperties": false
+      },
+      "wifiRssi": {
+        "anyOf": [
+          {
+            "type": "number",
+            "minimum": -130,
+            "maximum": 0
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "imu": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "armed": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "mode": {
+        "anyOf": [
+          {
+            "type": "string",
+            "maxLength": 80
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "inputs": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "rudder": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "elevator": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "leftAileron": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "rightAileron": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "throttle": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "aux1": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "aux2": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "rudder",
+              "elevator",
+              "leftAileron",
+              "rightAileron",
+              "throttle",
+              "aux1",
+              "aux2"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "rudder": {
+            "type": "object",
+            "properties": {
+              "normalized": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "pwm": {
+                "type": "integer",
+                "minimum": 500,
+                "maximum": 2500
+              },
+              "saturated": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "normalized",
+              "pwm",
+              "saturated"
+            ],
+            "additionalProperties": false
+          },
+          "elevator": {
+            "type": "object",
+            "properties": {
+              "normalized": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "pwm": {
+                "type": "integer",
+                "minimum": 500,
+                "maximum": 2500
+              },
+              "saturated": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "normalized",
+              "pwm",
+              "saturated"
+            ],
+            "additionalProperties": false
+          },
+          "leftAileron": {
+            "type": "object",
+            "properties": {
+              "normalized": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "pwm": {
+                "type": "integer",
+                "minimum": 500,
+                "maximum": 2500
+              },
+              "saturated": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "normalized",
+              "pwm",
+              "saturated"
+            ],
+            "additionalProperties": false
+          },
+          "rightAileron": {
+            "type": "object",
+            "properties": {
+              "normalized": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "pwm": {
+                "type": "integer",
+                "minimum": 500,
+                "maximum": 2500
+              },
+              "saturated": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "normalized",
+              "pwm",
+              "saturated"
+            ],
+            "additionalProperties": false
+          },
+          "throttle": {
+            "type": "object",
+            "properties": {
+              "normalized": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "pwm": {
+                "type": "integer",
+                "minimum": 500,
+                "maximum": 2500
+              },
+              "saturated": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "normalized",
+              "pwm",
+              "saturated"
+            ],
+            "additionalProperties": false
+          },
+          "aux1": {
+            "type": "object",
+            "properties": {
+              "normalized": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "pwm": {
+                "type": "integer",
+                "minimum": 500,
+                "maximum": 2500
+              },
+              "saturated": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "normalized",
+              "pwm",
+              "saturated"
+            ],
+            "additionalProperties": false
+          },
+          "aux2": {
+            "type": "object",
+            "properties": {
+              "normalized": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "pwm": {
+                "type": "integer",
+                "minimum": 500,
+                "maximum": 2500
+              },
+              "saturated": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "normalized",
+              "pwm",
+              "saturated"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "mixEnabled": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "configVersion": {
+        "anyOf": [
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "validity": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string",
+          "enum": [
+            "valid",
+            "invalid",
+            "unsupported",
+            "not_installed",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "required": [
+      "schemaVersion",
+      "source",
+      "deviceId",
+      "bootId",
+      "seq",
+      "uptimeMs",
+      "receivedAt",
+      "attitude",
+      "accel",
+      "gyro",
+      "linearAcceleration",
+      "chipTemp",
+      "sampleHz",
+      "aircraftVoltage",
+      "transmitterVoltage",
+      "radio",
+      "links",
+      "wifiRssi",
+      "imu",
+      "armed",
+      "mode",
+      "inputs",
+      "outputs",
+      "mixEnabled",
+      "configVersion",
+      "validity"
+    ],
+    "additionalProperties": false
+  },
+  "inputsSchema": {
+    "type": "object",
+    "properties": {
+      "rudder": {
+        "type": "number",
+        "minimum": -1,
+        "maximum": 1
+      },
+      "elevator": {
+        "type": "number",
+        "minimum": -1,
+        "maximum": 1
+      },
+      "leftAileron": {
+        "type": "number",
+        "minimum": -1,
+        "maximum": 1
+      },
+      "rightAileron": {
+        "type": "number",
+        "minimum": -1,
+        "maximum": 1
+      },
+      "throttle": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "aux1": {
+        "type": "number",
+        "minimum": -1,
+        "maximum": 1
+      },
+      "aux2": {
+        "type": "number",
+        "minimum": -1,
+        "maximum": 1
+      }
+    },
+    "required": [
+      "rudder",
+      "elevator",
+      "leftAileron",
+      "rightAileron",
+      "throttle",
+      "aux1",
+      "aux2"
+    ],
+    "additionalProperties": false
+  },
+  "recordingSchema": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 120
+      },
+      "notes": {
+        "type": "string",
+        "maxLength": 4000
+      },
+      "createdAt": {
+        "type": "number",
+        "minimum": 0
+      },
+      "source": {
+        "type": "string",
+        "enum": [
+          "DEMO",
+          "LIVE"
+        ]
+      },
+      "frames": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "source": {
+              "type": "string",
+              "enum": [
+                "DEMO",
+                "LIVE",
+                "REPLAY"
+              ]
+            },
+            "deviceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "bootId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "uptimeMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "receivedAt": {
+              "type": "number",
+              "minimum": 0
+            },
+            "attitude": {
+              "type": "object",
+              "properties": {
+                "pitch": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": -180,
+                      "maximum": 180
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "roll": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": -180,
+                      "maximum": 180
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "yaw": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "pitch",
+                "roll",
+                "yaw"
+              ],
+              "additionalProperties": false
+            },
+            "accel": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "y": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "z": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "x",
+                "y",
+                "z"
+              ],
+              "additionalProperties": false
+            },
+            "gyro": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "y": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "z": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "x",
+                "y",
+                "z"
+              ],
+              "additionalProperties": false
+            },
+            "linearAcceleration": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "y": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "z": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "chipTemp": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": -80,
+                  "maximum": 150
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "sampleHz": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 8000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "aircraftVoltage": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 65
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "transmitterVoltage": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 65
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "radio": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "received": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "expected": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "retries": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "packetAge": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rpd": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "received",
+                    "expected",
+                    "retries",
+                    "packetAge",
+                    "rpd"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Additional cross-field validation is enforced by the runtime schema."
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "links": {
+              "type": "object",
+              "properties": {
+                "radio": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "uart": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "wifi": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "uplink": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "radio",
+                "uart",
+                "wifi",
+                "uplink"
+              ],
+              "additionalProperties": false
+            },
+            "wifiRssi": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": -130,
+                  "maximum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "imu": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "armed": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "mode": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "inputs": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "rudder": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "elevator": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "leftAileron": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "rightAileron": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "throttle": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "aux1": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "aux2": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    }
+                  },
+                  "required": [
+                    "rudder",
+                    "elevator",
+                    "leftAileron",
+                    "rightAileron",
+                    "throttle",
+                    "aux1",
+                    "aux2"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "outputs": {
+              "type": "object",
+              "properties": {
+                "rudder": {
+                  "type": "object",
+                  "properties": {
+                    "normalized": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "pwm": {
+                      "type": "integer",
+                      "minimum": 500,
+                      "maximum": 2500
+                    },
+                    "saturated": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "normalized",
+                    "pwm",
+                    "saturated"
+                  ],
+                  "additionalProperties": false
+                },
+                "elevator": {
+                  "type": "object",
+                  "properties": {
+                    "normalized": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "pwm": {
+                      "type": "integer",
+                      "minimum": 500,
+                      "maximum": 2500
+                    },
+                    "saturated": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "normalized",
+                    "pwm",
+                    "saturated"
+                  ],
+                  "additionalProperties": false
+                },
+                "leftAileron": {
+                  "type": "object",
+                  "properties": {
+                    "normalized": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "pwm": {
+                      "type": "integer",
+                      "minimum": 500,
+                      "maximum": 2500
+                    },
+                    "saturated": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "normalized",
+                    "pwm",
+                    "saturated"
+                  ],
+                  "additionalProperties": false
+                },
+                "rightAileron": {
+                  "type": "object",
+                  "properties": {
+                    "normalized": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "pwm": {
+                      "type": "integer",
+                      "minimum": 500,
+                      "maximum": 2500
+                    },
+                    "saturated": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "normalized",
+                    "pwm",
+                    "saturated"
+                  ],
+                  "additionalProperties": false
+                },
+                "throttle": {
+                  "type": "object",
+                  "properties": {
+                    "normalized": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "pwm": {
+                      "type": "integer",
+                      "minimum": 500,
+                      "maximum": 2500
+                    },
+                    "saturated": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "normalized",
+                    "pwm",
+                    "saturated"
+                  ],
+                  "additionalProperties": false
+                },
+                "aux1": {
+                  "type": "object",
+                  "properties": {
+                    "normalized": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "pwm": {
+                      "type": "integer",
+                      "minimum": 500,
+                      "maximum": 2500
+                    },
+                    "saturated": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "normalized",
+                    "pwm",
+                    "saturated"
+                  ],
+                  "additionalProperties": false
+                },
+                "aux2": {
+                  "type": "object",
+                  "properties": {
+                    "normalized": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "pwm": {
+                      "type": "integer",
+                      "minimum": 500,
+                      "maximum": 2500
+                    },
+                    "saturated": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "normalized",
+                    "pwm",
+                    "saturated"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "mixEnabled": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "configVersion": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "validity": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "enum": [
+                  "valid",
+                  "invalid",
+                  "unsupported",
+                  "not_installed",
+                  "unknown"
+                ]
+              }
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "source",
+            "deviceId",
+            "bootId",
+            "seq",
+            "uptimeMs",
+            "receivedAt",
+            "attitude",
+            "accel",
+            "gyro",
+            "linearAcceleration",
+            "chipTemp",
+            "sampleHz",
+            "aircraftVoltage",
+            "transmitterVoltage",
+            "radio",
+            "links",
+            "wifiRssi",
+            "imu",
+            "armed",
+            "mode",
+            "inputs",
+            "outputs",
+            "mixEnabled",
+            "configVersion",
+            "validity"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 18000
+      },
+      "events": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "environment": {
+              "type": "string",
+              "enum": [
+                "DEMO",
+                "LIVE",
+                "REPLAY"
+              ]
+            },
+            "aircraftId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "configuration": {
+              "type": "object",
+              "properties": {
+                "modes": {
+                  "type": "object",
+                  "properties": {
+                    "version": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "presets": {
+                      "type": "object",
+                      "properties": {
+                        "cruise": {
+                          "type": "object",
+                          "properties": {
+                            "angles": {
+                              "type": "object",
+                              "properties": {
+                                "leftAileron": {
+                                  "type": "number",
+                                  "minimum": -45,
+                                  "maximum": 45
+                                },
+                                "rightAileron": {
+                                  "type": "number",
+                                  "minimum": -45,
+                                  "maximum": 45
+                                },
+                                "elevator": {
+                                  "type": "number",
+                                  "minimum": -45,
+                                  "maximum": 45
+                                },
+                                "rudder": {
+                                  "type": "number",
+                                  "minimum": -45,
+                                  "maximum": 45
+                                }
+                              },
+                              "required": [
+                                "leftAileron",
+                                "rightAileron",
+                                "elevator",
+                                "rudder"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "transitionSeconds": {
+                              "type": "number",
+                              "minimum": 1,
+                              "maximum": 15
+                            }
+                          },
+                          "required": [
+                            "angles",
+                            "transitionSeconds"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "takeoff": {
+                          "type": "object",
+                          "properties": {
+                            "angles": {
+                              "type": "object",
+                              "properties": {
+                                "leftAileron": {
+                                  "type": "number",
+                                  "minimum": -45,
+                                  "maximum": 45
+                                },
+                                "rightAileron": {
+                                  "type": "number",
+                                  "minimum": -45,
+                                  "maximum": 45
+                                },
+                                "elevator": {
+                                  "type": "number",
+                                  "minimum": -45,
+                                  "maximum": 45
+                                },
+                                "rudder": {
+                                  "type": "number",
+                                  "minimum": -45,
+                                  "maximum": 45
+                                }
+                              },
+                              "required": [
+                                "leftAileron",
+                                "rightAileron",
+                                "elevator",
+                                "rudder"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "transitionSeconds": {
+                              "type": "number",
+                              "minimum": 1,
+                              "maximum": 15
+                            }
+                          },
+                          "required": [
+                            "angles",
+                            "transitionSeconds"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "landing": {
+                          "type": "object",
+                          "properties": {
+                            "angles": {
+                              "type": "object",
+                              "properties": {
+                                "leftAileron": {
+                                  "type": "number",
+                                  "minimum": -45,
+                                  "maximum": 45
+                                },
+                                "rightAileron": {
+                                  "type": "number",
+                                  "minimum": -45,
+                                  "maximum": 45
+                                },
+                                "elevator": {
+                                  "type": "number",
+                                  "minimum": -45,
+                                  "maximum": 45
+                                },
+                                "rudder": {
+                                  "type": "number",
+                                  "minimum": -45,
+                                  "maximum": 45
+                                }
+                              },
+                              "required": [
+                                "leftAileron",
+                                "rightAileron",
+                                "elevator",
+                                "rudder"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "transitionSeconds": {
+                              "type": "number",
+                              "minimum": 1,
+                              "maximum": 15
+                            }
+                          },
+                          "required": [
+                            "angles",
+                            "transitionSeconds"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "cruise",
+                        "takeoff",
+                        "landing"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "travelDegrees": {
+                      "type": "object",
+                      "properties": {
+                        "leftAileron": {
+                          "type": "number",
+                          "minimum": 1,
+                          "maximum": 45
+                        },
+                        "rightAileron": {
+                          "type": "number",
+                          "minimum": 1,
+                          "maximum": 45
+                        },
+                        "elevator": {
+                          "type": "number",
+                          "minimum": 1,
+                          "maximum": 45
+                        },
+                        "rudder": {
+                          "type": "number",
+                          "minimum": 1,
+                          "maximum": 45
+                        }
+                      },
+                      "required": [
+                        "leftAileron",
+                        "rightAileron",
+                        "elevator",
+                        "rudder"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxDegreesPerSecond": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 30
+                    },
+                    "startup": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "delaySeconds": {
+                          "const": 5
+                        },
+                        "amplitudeDegrees": {
+                          "type": "number",
+                          "minimum": 1,
+                          "maximum": 10
+                        }
+                      },
+                      "required": [
+                        "enabled",
+                        "delaySeconds",
+                        "amplitudeDegrees"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "version",
+                    "presets",
+                    "travelDegrees",
+                    "maxDegreesPerSecond",
+                    "startup"
+                  ],
+                  "additionalProperties": false
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                },
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^[A-Za-z0-9_-]+$"
+                },
+                "units": {
+                  "type": "string",
+                  "enum": [
+                    "g",
+                    "ms2"
+                  ]
+                },
+                "mounting": {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                "sampleHz": {
+                  "anyOf": [
+                    {
+                      "const": 5
+                    },
+                    {
+                      "const": 10
+                    }
+                  ]
+                },
+                "aircraftBattery": {
+                  "type": "object",
+                  "properties": {
+                    "cells": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "chemistry": {
+                      "type": "string",
+                      "enum": [
+                        "LiPo",
+                        "Li-ion",
+                        "Other"
+                      ]
+                    },
+                    "warning": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 60
+                    },
+                    "critical": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 60
+                    },
+                    "scale": {
+                      "type": "number",
+                      "minimum": 0.1,
+                      "maximum": 5
+                    }
+                  },
+                  "required": [
+                    "cells",
+                    "chemistry",
+                    "warning",
+                    "critical",
+                    "scale"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Additional cross-field validation is enforced by the runtime schema."
+                },
+                "transmitterBattery": {
+                  "type": "object",
+                  "properties": {
+                    "cells": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "chemistry": {
+                      "type": "string",
+                      "enum": [
+                        "LiPo",
+                        "Li-ion",
+                        "Other"
+                      ]
+                    },
+                    "warning": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 60
+                    },
+                    "critical": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 60
+                    },
+                    "scale": {
+                      "type": "number",
+                      "minimum": 0.1,
+                      "maximum": 5
+                    }
+                  },
+                  "required": [
+                    "cells",
+                    "chemistry",
+                    "warning",
+                    "critical",
+                    "scale"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Additional cross-field validation is enforced by the runtime schema."
+                },
+                "mixer": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "common": {
+                      "type": "boolean"
+                    },
+                    "strength": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1.5
+                    },
+                    "differential": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 0.8
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "channels": {
+                      "type": "object",
+                      "properties": {
+                        "rudder": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 60
+                            },
+                            "min": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "center": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "max": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "reverse": {
+                              "type": "boolean"
+                            },
+                            "deadband": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 0.2
+                            },
+                            "trim": {
+                              "type": "number",
+                              "minimum": -0.3,
+                              "maximum": 0.3
+                            },
+                            "subtrim": {
+                              "type": "number",
+                              "minimum": -150,
+                              "maximum": 150
+                            },
+                            "expo": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "rate": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1.5
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "min",
+                            "center",
+                            "max",
+                            "reverse",
+                            "deadband",
+                            "trim",
+                            "subtrim",
+                            "expo",
+                            "rate"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Additional cross-field validation is enforced by the runtime schema."
+                        },
+                        "elevator": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 60
+                            },
+                            "min": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "center": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "max": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "reverse": {
+                              "type": "boolean"
+                            },
+                            "deadband": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 0.2
+                            },
+                            "trim": {
+                              "type": "number",
+                              "minimum": -0.3,
+                              "maximum": 0.3
+                            },
+                            "subtrim": {
+                              "type": "number",
+                              "minimum": -150,
+                              "maximum": 150
+                            },
+                            "expo": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "rate": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1.5
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "min",
+                            "center",
+                            "max",
+                            "reverse",
+                            "deadband",
+                            "trim",
+                            "subtrim",
+                            "expo",
+                            "rate"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Additional cross-field validation is enforced by the runtime schema."
+                        },
+                        "leftAileron": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 60
+                            },
+                            "min": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "center": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "max": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "reverse": {
+                              "type": "boolean"
+                            },
+                            "deadband": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 0.2
+                            },
+                            "trim": {
+                              "type": "number",
+                              "minimum": -0.3,
+                              "maximum": 0.3
+                            },
+                            "subtrim": {
+                              "type": "number",
+                              "minimum": -150,
+                              "maximum": 150
+                            },
+                            "expo": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "rate": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1.5
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "min",
+                            "center",
+                            "max",
+                            "reverse",
+                            "deadband",
+                            "trim",
+                            "subtrim",
+                            "expo",
+                            "rate"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Additional cross-field validation is enforced by the runtime schema."
+                        },
+                        "rightAileron": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 60
+                            },
+                            "min": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "center": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "max": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "reverse": {
+                              "type": "boolean"
+                            },
+                            "deadband": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 0.2
+                            },
+                            "trim": {
+                              "type": "number",
+                              "minimum": -0.3,
+                              "maximum": 0.3
+                            },
+                            "subtrim": {
+                              "type": "number",
+                              "minimum": -150,
+                              "maximum": 150
+                            },
+                            "expo": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "rate": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1.5
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "min",
+                            "center",
+                            "max",
+                            "reverse",
+                            "deadband",
+                            "trim",
+                            "subtrim",
+                            "expo",
+                            "rate"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Additional cross-field validation is enforced by the runtime schema."
+                        },
+                        "throttle": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 60
+                            },
+                            "min": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "center": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "max": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "reverse": {
+                              "type": "boolean"
+                            },
+                            "deadband": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 0.2
+                            },
+                            "trim": {
+                              "type": "number",
+                              "minimum": -0.3,
+                              "maximum": 0.3
+                            },
+                            "subtrim": {
+                              "type": "number",
+                              "minimum": -150,
+                              "maximum": 150
+                            },
+                            "expo": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "rate": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1.5
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "min",
+                            "center",
+                            "max",
+                            "reverse",
+                            "deadband",
+                            "trim",
+                            "subtrim",
+                            "expo",
+                            "rate"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Additional cross-field validation is enforced by the runtime schema."
+                        },
+                        "aux1": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 60
+                            },
+                            "min": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "center": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "max": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "reverse": {
+                              "type": "boolean"
+                            },
+                            "deadband": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 0.2
+                            },
+                            "trim": {
+                              "type": "number",
+                              "minimum": -0.3,
+                              "maximum": 0.3
+                            },
+                            "subtrim": {
+                              "type": "number",
+                              "minimum": -150,
+                              "maximum": 150
+                            },
+                            "expo": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "rate": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1.5
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "min",
+                            "center",
+                            "max",
+                            "reverse",
+                            "deadband",
+                            "trim",
+                            "subtrim",
+                            "expo",
+                            "rate"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Additional cross-field validation is enforced by the runtime schema."
+                        },
+                        "aux2": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 60
+                            },
+                            "min": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "center": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "max": {
+                              "type": "number",
+                              "minimum": 750,
+                              "maximum": 2250
+                            },
+                            "reverse": {
+                              "type": "boolean"
+                            },
+                            "deadband": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 0.2
+                            },
+                            "trim": {
+                              "type": "number",
+                              "minimum": -0.3,
+                              "maximum": 0.3
+                            },
+                            "subtrim": {
+                              "type": "number",
+                              "minimum": -150,
+                              "maximum": 150
+                            },
+                            "expo": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "rate": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1.5
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "min",
+                            "center",
+                            "max",
+                            "reverse",
+                            "deadband",
+                            "trim",
+                            "subtrim",
+                            "expo",
+                            "rate"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Additional cross-field validation is enforced by the runtime schema."
+                        }
+                      },
+                      "required": [
+                        "rudder",
+                        "elevator",
+                        "leftAileron",
+                        "rightAileron",
+                        "throttle",
+                        "aux1",
+                        "aux2"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "common",
+                    "strength",
+                    "differential",
+                    "version",
+                    "channels"
+                  ],
+                  "additionalProperties": false
+                },
+                "preflight": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "boolean"
+                  }
+                },
+                "calibration": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "note": {
+                        "type": "string",
+                        "maxLength": 250
+                      }
+                    },
+                    "required": [
+                      "at",
+                      "note"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 30
+                },
+                "browserAudio": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "name",
+                "id",
+                "units",
+                "mounting",
+                "sampleHz",
+                "aircraftBattery",
+                "transmitterBattery",
+                "mixer",
+                "preflight",
+                "calibration",
+                "browserAudio"
+              ],
+              "additionalProperties": false
+            },
+            "command": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "aircraftId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^[A-Za-z0-9_-]+$"
+                },
+                "issuer": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 150
+                },
+                "environment": {
+                  "const": "DEMO"
+                },
+                "kind": {
+                  "const": "servo.test"
+                },
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "axis": {
+                      "type": "string",
+                      "enum": [
+                        "leftAileron",
+                        "rightAileron",
+                        "elevator",
+                        "rudder"
+                      ]
+                    },
+                    "value": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    }
+                  },
+                  "required": [
+                    "axis",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                },
+                "createdAt": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "expiresAt": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "Applied (simulator)",
+                    "Rejected"
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                "sent": {
+                  "const": false
+                }
+              },
+              "required": [
+                "id",
+                "aircraftId",
+                "issuer",
+                "environment",
+                "kind",
+                "parameters",
+                "createdAt",
+                "expiresAt",
+                "status",
+                "reason",
+                "sent"
+              ],
+              "additionalProperties": false
+            },
+            "id": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "at": {
+              "type": "number",
+              "minimum": 0
+            },
+            "title": {
+              "type": "string",
+              "maxLength": 120
+            },
+            "detail": {
+              "type": "string",
+              "maxLength": 1200
+            },
+            "source": {
+              "type": "string",
+              "maxLength": 60
+            },
+            "severity": {
+              "type": "string",
+              "enum": [
+                "info",
+                "warning",
+                "critical"
+              ]
+            },
+            "acknowledged": {
+              "type": "boolean"
+            },
+            "resolved": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "at",
+            "title",
+            "detail",
+            "source",
+            "severity",
+            "acknowledged",
+            "resolved"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 250
+      },
+      "settings": {
+        "type": "object",
+        "properties": {
+          "modes": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "presets": {
+                "type": "object",
+                "properties": {
+                  "cruise": {
+                    "type": "object",
+                    "properties": {
+                      "angles": {
+                        "type": "object",
+                        "properties": {
+                          "leftAileron": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "rightAileron": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "elevator": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "rudder": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          }
+                        },
+                        "required": [
+                          "leftAileron",
+                          "rightAileron",
+                          "elevator",
+                          "rudder"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "transitionSeconds": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 15
+                      }
+                    },
+                    "required": [
+                      "angles",
+                      "transitionSeconds"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "takeoff": {
+                    "type": "object",
+                    "properties": {
+                      "angles": {
+                        "type": "object",
+                        "properties": {
+                          "leftAileron": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "rightAileron": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "elevator": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "rudder": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          }
+                        },
+                        "required": [
+                          "leftAileron",
+                          "rightAileron",
+                          "elevator",
+                          "rudder"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "transitionSeconds": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 15
+                      }
+                    },
+                    "required": [
+                      "angles",
+                      "transitionSeconds"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "landing": {
+                    "type": "object",
+                    "properties": {
+                      "angles": {
+                        "type": "object",
+                        "properties": {
+                          "leftAileron": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "rightAileron": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "elevator": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          },
+                          "rudder": {
+                            "type": "number",
+                            "minimum": -45,
+                            "maximum": 45
+                          }
+                        },
+                        "required": [
+                          "leftAileron",
+                          "rightAileron",
+                          "elevator",
+                          "rudder"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "transitionSeconds": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 15
+                      }
+                    },
+                    "required": [
+                      "angles",
+                      "transitionSeconds"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "cruise",
+                  "takeoff",
+                  "landing"
+                ],
+                "additionalProperties": false
+              },
+              "travelDegrees": {
+                "type": "object",
+                "properties": {
+                  "leftAileron": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 45
+                  },
+                  "rightAileron": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 45
+                  },
+                  "elevator": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 45
+                  },
+                  "rudder": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 45
+                  }
+                },
+                "required": [
+                  "leftAileron",
+                  "rightAileron",
+                  "elevator",
+                  "rudder"
+                ],
+                "additionalProperties": false
+              },
+              "maxDegreesPerSecond": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 30
+              },
+              "startup": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "delaySeconds": {
+                    "const": 5
+                  },
+                  "amplitudeDegrees": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 10
+                  }
+                },
+                "required": [
+                  "enabled",
+                  "delaySeconds",
+                  "amplitudeDegrees"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "version",
+              "presets",
+              "travelDegrees",
+              "maxDegreesPerSecond",
+              "startup"
+            ],
+            "additionalProperties": false
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "units": {
+            "type": "string",
+            "enum": [
+              "g",
+              "ms2"
+            ]
+          },
+          "mounting": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "sampleHz": {
+            "anyOf": [
+              {
+                "const": 5
+              },
+              {
+                "const": 10
+              }
+            ]
+          },
+          "aircraftBattery": {
+            "type": "object",
+            "properties": {
+              "cells": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 12
+              },
+              "chemistry": {
+                "type": "string",
+                "enum": [
+                  "LiPo",
+                  "Li-ion",
+                  "Other"
+                ]
+              },
+              "warning": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 60
+              },
+              "critical": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 60
+              },
+              "scale": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 5
+              }
+            },
+            "required": [
+              "cells",
+              "chemistry",
+              "warning",
+              "critical",
+              "scale"
+            ],
+            "additionalProperties": false,
+            "description": "Additional cross-field validation is enforced by the runtime schema."
+          },
+          "transmitterBattery": {
+            "type": "object",
+            "properties": {
+              "cells": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 12
+              },
+              "chemistry": {
+                "type": "string",
+                "enum": [
+                  "LiPo",
+                  "Li-ion",
+                  "Other"
+                ]
+              },
+              "warning": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 60
+              },
+              "critical": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 60
+              },
+              "scale": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 5
+              }
+            },
+            "required": [
+              "cells",
+              "chemistry",
+              "warning",
+              "critical",
+              "scale"
+            ],
+            "additionalProperties": false,
+            "description": "Additional cross-field validation is enforced by the runtime schema."
+          },
+          "mixer": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "common": {
+                "type": "boolean"
+              },
+              "strength": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1.5
+              },
+              "differential": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 0.8
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "channels": {
+                "type": "object",
+                "properties": {
+                  "rudder": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  },
+                  "elevator": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  },
+                  "leftAileron": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  },
+                  "rightAileron": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  },
+                  "throttle": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  },
+                  "aux1": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  },
+                  "aux2": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                      },
+                      "min": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "center": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "max": {
+                        "type": "number",
+                        "minimum": 750,
+                        "maximum": 2250
+                      },
+                      "reverse": {
+                        "type": "boolean"
+                      },
+                      "deadband": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 0.2
+                      },
+                      "trim": {
+                        "type": "number",
+                        "minimum": -0.3,
+                        "maximum": 0.3
+                      },
+                      "subtrim": {
+                        "type": "number",
+                        "minimum": -150,
+                        "maximum": 150
+                      },
+                      "expo": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1.5
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "min",
+                      "center",
+                      "max",
+                      "reverse",
+                      "deadband",
+                      "trim",
+                      "subtrim",
+                      "expo",
+                      "rate"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Additional cross-field validation is enforced by the runtime schema."
+                  }
+                },
+                "required": [
+                  "rudder",
+                  "elevator",
+                  "leftAileron",
+                  "rightAileron",
+                  "throttle",
+                  "aux1",
+                  "aux2"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "enabled",
+              "common",
+              "strength",
+              "differential",
+              "version",
+              "channels"
+            ],
+            "additionalProperties": false
+          },
+          "preflight": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "calibration": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "note": {
+                  "type": "string",
+                  "maxLength": 250
+                }
+              },
+              "required": [
+                "at",
+                "note"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 30
+          },
+          "browserAudio": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "id",
+          "units",
+          "mounting",
+          "sampleHz",
+          "aircraftBattery",
+          "transmitterBattery",
+          "mixer",
+          "preflight",
+          "calibration",
+          "browserAudio"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "notes",
+      "createdAt",
+      "source",
+      "frames",
+      "events",
+      "settings"
+    ],
+    "additionalProperties": false,
+    "description": "Additional cross-field validation is enforced by the runtime schema."
+  },
+  "settingsSchema": {
+    "type": "object",
+    "properties": {
+      "modes": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "presets": {
+            "type": "object",
+            "properties": {
+              "cruise": {
+                "type": "object",
+                "properties": {
+                  "angles": {
+                    "type": "object",
+                    "properties": {
+                      "leftAileron": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "rightAileron": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "elevator": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "rudder": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      }
+                    },
+                    "required": [
+                      "leftAileron",
+                      "rightAileron",
+                      "elevator",
+                      "rudder"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "transitionSeconds": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 15
+                  }
+                },
+                "required": [
+                  "angles",
+                  "transitionSeconds"
+                ],
+                "additionalProperties": false
+              },
+              "takeoff": {
+                "type": "object",
+                "properties": {
+                  "angles": {
+                    "type": "object",
+                    "properties": {
+                      "leftAileron": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "rightAileron": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "elevator": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "rudder": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      }
+                    },
+                    "required": [
+                      "leftAileron",
+                      "rightAileron",
+                      "elevator",
+                      "rudder"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "transitionSeconds": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 15
+                  }
+                },
+                "required": [
+                  "angles",
+                  "transitionSeconds"
+                ],
+                "additionalProperties": false
+              },
+              "landing": {
+                "type": "object",
+                "properties": {
+                  "angles": {
+                    "type": "object",
+                    "properties": {
+                      "leftAileron": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "rightAileron": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "elevator": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      },
+                      "rudder": {
+                        "type": "number",
+                        "minimum": -45,
+                        "maximum": 45
+                      }
+                    },
+                    "required": [
+                      "leftAileron",
+                      "rightAileron",
+                      "elevator",
+                      "rudder"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "transitionSeconds": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 15
+                  }
+                },
+                "required": [
+                  "angles",
+                  "transitionSeconds"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "cruise",
+              "takeoff",
+              "landing"
+            ],
+            "additionalProperties": false
+          },
+          "travelDegrees": {
+            "type": "object",
+            "properties": {
+              "leftAileron": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 45
+              },
+              "rightAileron": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 45
+              },
+              "elevator": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 45
+              },
+              "rudder": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 45
+              }
+            },
+            "required": [
+              "leftAileron",
+              "rightAileron",
+              "elevator",
+              "rudder"
+            ],
+            "additionalProperties": false
+          },
+          "maxDegreesPerSecond": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "startup": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "delaySeconds": {
+                "const": 5
+              },
+              "amplitudeDegrees": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 10
+              }
+            },
+            "required": [
+              "enabled",
+              "delaySeconds",
+              "amplitudeDegrees"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "version",
+          "presets",
+          "travelDegrees",
+          "maxDegreesPerSecond",
+          "startup"
+        ],
+        "additionalProperties": false
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 60
+      },
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "units": {
+        "type": "string",
+        "enum": [
+          "g",
+          "ms2"
+        ]
+      },
+      "mounting": {
+        "type": "string",
+        "maxLength": 80
+      },
+      "sampleHz": {
+        "anyOf": [
+          {
+            "const": 5
+          },
+          {
+            "const": 10
+          }
+        ]
+      },
+      "aircraftBattery": {
+        "type": "object",
+        "properties": {
+          "cells": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          },
+          "chemistry": {
+            "type": "string",
+            "enum": [
+              "LiPo",
+              "Li-ion",
+              "Other"
+            ]
+          },
+          "warning": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 60
+          },
+          "critical": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 60
+          },
+          "scale": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 5
+          }
+        },
+        "required": [
+          "cells",
+          "chemistry",
+          "warning",
+          "critical",
+          "scale"
+        ],
+        "additionalProperties": false,
+        "description": "Additional cross-field validation is enforced by the runtime schema."
+      },
+      "transmitterBattery": {
+        "type": "object",
+        "properties": {
+          "cells": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          },
+          "chemistry": {
+            "type": "string",
+            "enum": [
+              "LiPo",
+              "Li-ion",
+              "Other"
+            ]
+          },
+          "warning": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 60
+          },
+          "critical": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 60
+          },
+          "scale": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 5
+          }
+        },
+        "required": [
+          "cells",
+          "chemistry",
+          "warning",
+          "critical",
+          "scale"
+        ],
+        "additionalProperties": false,
+        "description": "Additional cross-field validation is enforced by the runtime schema."
+      },
+      "mixer": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "common": {
+            "type": "boolean"
+          },
+          "strength": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.5
+          },
+          "differential": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 0.8
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "channels": {
+            "type": "object",
+            "properties": {
+              "rudder": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "min": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "center": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "max": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "reverse": {
+                    "type": "boolean"
+                  },
+                  "deadband": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 0.2
+                  },
+                  "trim": {
+                    "type": "number",
+                    "minimum": -0.3,
+                    "maximum": 0.3
+                  },
+                  "subtrim": {
+                    "type": "number",
+                    "minimum": -150,
+                    "maximum": 150
+                  },
+                  "expo": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "rate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1.5
+                  }
+                },
+                "required": [
+                  "name",
+                  "min",
+                  "center",
+                  "max",
+                  "reverse",
+                  "deadband",
+                  "trim",
+                  "subtrim",
+                  "expo",
+                  "rate"
+                ],
+                "additionalProperties": false,
+                "description": "Additional cross-field validation is enforced by the runtime schema."
+              },
+              "elevator": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "min": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "center": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "max": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "reverse": {
+                    "type": "boolean"
+                  },
+                  "deadband": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 0.2
+                  },
+                  "trim": {
+                    "type": "number",
+                    "minimum": -0.3,
+                    "maximum": 0.3
+                  },
+                  "subtrim": {
+                    "type": "number",
+                    "minimum": -150,
+                    "maximum": 150
+                  },
+                  "expo": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "rate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1.5
+                  }
+                },
+                "required": [
+                  "name",
+                  "min",
+                  "center",
+                  "max",
+                  "reverse",
+                  "deadband",
+                  "trim",
+                  "subtrim",
+                  "expo",
+                  "rate"
+                ],
+                "additionalProperties": false,
+                "description": "Additional cross-field validation is enforced by the runtime schema."
+              },
+              "leftAileron": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "min": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "center": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "max": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "reverse": {
+                    "type": "boolean"
+                  },
+                  "deadband": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 0.2
+                  },
+                  "trim": {
+                    "type": "number",
+                    "minimum": -0.3,
+                    "maximum": 0.3
+                  },
+                  "subtrim": {
+                    "type": "number",
+                    "minimum": -150,
+                    "maximum": 150
+                  },
+                  "expo": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "rate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1.5
+                  }
+                },
+                "required": [
+                  "name",
+                  "min",
+                  "center",
+                  "max",
+                  "reverse",
+                  "deadband",
+                  "trim",
+                  "subtrim",
+                  "expo",
+                  "rate"
+                ],
+                "additionalProperties": false,
+                "description": "Additional cross-field validation is enforced by the runtime schema."
+              },
+              "rightAileron": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "min": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "center": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "max": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "reverse": {
+                    "type": "boolean"
+                  },
+                  "deadband": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 0.2
+                  },
+                  "trim": {
+                    "type": "number",
+                    "minimum": -0.3,
+                    "maximum": 0.3
+                  },
+                  "subtrim": {
+                    "type": "number",
+                    "minimum": -150,
+                    "maximum": 150
+                  },
+                  "expo": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "rate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1.5
+                  }
+                },
+                "required": [
+                  "name",
+                  "min",
+                  "center",
+                  "max",
+                  "reverse",
+                  "deadband",
+                  "trim",
+                  "subtrim",
+                  "expo",
+                  "rate"
+                ],
+                "additionalProperties": false,
+                "description": "Additional cross-field validation is enforced by the runtime schema."
+              },
+              "throttle": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "min": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "center": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "max": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "reverse": {
+                    "type": "boolean"
+                  },
+                  "deadband": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 0.2
+                  },
+                  "trim": {
+                    "type": "number",
+                    "minimum": -0.3,
+                    "maximum": 0.3
+                  },
+                  "subtrim": {
+                    "type": "number",
+                    "minimum": -150,
+                    "maximum": 150
+                  },
+                  "expo": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "rate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1.5
+                  }
+                },
+                "required": [
+                  "name",
+                  "min",
+                  "center",
+                  "max",
+                  "reverse",
+                  "deadband",
+                  "trim",
+                  "subtrim",
+                  "expo",
+                  "rate"
+                ],
+                "additionalProperties": false,
+                "description": "Additional cross-field validation is enforced by the runtime schema."
+              },
+              "aux1": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "min": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "center": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "max": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "reverse": {
+                    "type": "boolean"
+                  },
+                  "deadband": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 0.2
+                  },
+                  "trim": {
+                    "type": "number",
+                    "minimum": -0.3,
+                    "maximum": 0.3
+                  },
+                  "subtrim": {
+                    "type": "number",
+                    "minimum": -150,
+                    "maximum": 150
+                  },
+                  "expo": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "rate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1.5
+                  }
+                },
+                "required": [
+                  "name",
+                  "min",
+                  "center",
+                  "max",
+                  "reverse",
+                  "deadband",
+                  "trim",
+                  "subtrim",
+                  "expo",
+                  "rate"
+                ],
+                "additionalProperties": false,
+                "description": "Additional cross-field validation is enforced by the runtime schema."
+              },
+              "aux2": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "min": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "center": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "max": {
+                    "type": "number",
+                    "minimum": 750,
+                    "maximum": 2250
+                  },
+                  "reverse": {
+                    "type": "boolean"
+                  },
+                  "deadband": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 0.2
+                  },
+                  "trim": {
+                    "type": "number",
+                    "minimum": -0.3,
+                    "maximum": 0.3
+                  },
+                  "subtrim": {
+                    "type": "number",
+                    "minimum": -150,
+                    "maximum": 150
+                  },
+                  "expo": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "rate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1.5
+                  }
+                },
+                "required": [
+                  "name",
+                  "min",
+                  "center",
+                  "max",
+                  "reverse",
+                  "deadband",
+                  "trim",
+                  "subtrim",
+                  "expo",
+                  "rate"
+                ],
+                "additionalProperties": false,
+                "description": "Additional cross-field validation is enforced by the runtime schema."
+              }
+            },
+            "required": [
+              "rudder",
+              "elevator",
+              "leftAileron",
+              "rightAileron",
+              "throttle",
+              "aux1",
+              "aux2"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "enabled",
+          "common",
+          "strength",
+          "differential",
+          "version",
+          "channels"
+        ],
+        "additionalProperties": false
+      },
+      "preflight": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "boolean"
+        }
+      },
+      "calibration": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 250
+            }
+          },
+          "required": [
+            "at",
+            "note"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 30
+      },
+      "browserAudio": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "name",
+      "id",
+      "units",
+      "mounting",
+      "sampleHz",
+      "aircraftBattery",
+      "transmitterBattery",
+      "mixer",
+      "preflight",
+      "calibration",
+      "browserAudio"
+    ],
+    "additionalProperties": false
+  }
+}
