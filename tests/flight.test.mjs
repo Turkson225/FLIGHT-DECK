@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {newId,defaultSettings,zeroInputs,mixOutputs,latchMix,auxiliaryCommand,simulate,emptyFrame,faults,csvFor,seedRecordings,commandRejection,sanitizeTelemetry,demoCapabilities,telemetryGapThreshold} from '../lib/flight.ts';
+import {newId,defaultSettings,zeroInputs,mixOutputs,latchMix,auxiliaryCommand,simulate,emptyFrame,faults,csvFor,seedRecordings,commandRejection,sanitizeTelemetry,demoCapabilities} from '../lib/flight.ts';
+import {telemetryGapThreshold} from '../lib/telemetry-chart.ts';
 import {settingsSchema,frameSchema,recordingSchema,commandSchema,roleCanWrite} from '../lib/contracts.ts';
 const settings=()=>structuredClone(defaultSettings);
 test('invalid validity flags suppress numeric values',()=>{const f=simulate(1,'cruise',settings(),1000);f.validity.imu='invalid';f.validity.aircraftBattery='invalid';const clean=sanitizeTelemetry(f,demoCapabilities);assert.equal(clean.attitude.roll,null);assert.equal(clean.accel.x,null);assert.equal(clean.aircraftVoltage,null);assert.notEqual(f.aircraftVoltage,null)});
