@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {newId,defaultSettings,zeroInputs,mixOutputs,latchMix,auxiliaryCommand,simulate,emptyFrame,faults,csvFor,seedRecordings,commandRejection,sanitizeTelemetry,demoCapabilities} from '../lib/flight.ts';
+import {newId,defaultSettings,zeroInputs,mixOutputs,latchMix,auxiliaryCommand,simulate,emptyFrame,faults,csvFor,seedRecordings,commandRejection,sanitizeTelemetry,demoCapabilities,telemetryGapThreshold} from '../lib/flight.ts';
 import {settingsSchema,frameSchema,recordingSchema,commandSchema,roleCanWrite} from '../lib/contracts.ts';
 const settings=()=>structuredClone(defaultSettings);
 test('invalid validity flags suppress numeric values',()=>{const f=simulate(1,'cruise',settings(),1000);f.validity.imu='invalid';f.validity.aircraftBattery='invalid';const clean=sanitizeTelemetry(f,demoCapabilities);assert.equal(clean.attitude.roll,null);assert.equal(clean.accel.x,null);assert.equal(clean.aircraftVoltage,null);assert.notEqual(f.aircraftVoltage,null)});
@@ -20,6 +20,13 @@ test('UART loss invalidates dependent radio and outputs',()=>{const f=simulate(3
 test('IMU loss never looks like level attitude',()=>{const f=simulate(30,'imu',settings(),1000);assert.deepEqual(f.attitude,{pitch:null,roll:null,yaw:null});assert.equal(f.chipTemp,null)});
 test('CSV has one line per sample with blanks for missing values',()=>{const r=seedRecordings()[0];r.frames=[emptyFrame(),simulate(1,'cruise',settings(),1000)];const csv=csvFor(r);assert.equal(csv.split('\n').length,3);assert.match(csv.split('\n')[1],/,,,/);assert.equal(csv.split('\n')[0].split(',').length,csv.split('\n')[2].split(',').length)});
 test('JSON preserves nulls and missing-data time gaps',()=>{const r=seedRecordings()[0];r.frames=[simulate(0,'cruise',settings(),1000),simulate(10,'imu',settings(),1000)];const copy=JSON.parse(JSON.stringify(r));assert.equal(copy.frames[1].receivedAt-copy.frames[0].receivedAt,10000);assert.equal(copy.frames[1].attitude.roll,null)});
+test('chart gap detection adapts to live telemetry cadence',()=>{
+ const times=(values)=>values.map(receivedAt=>({receivedAt}));
+ assert.equal(telemetryGapThreshold(times([0,100,200,300])),600);
+ assert.equal(telemetryGapThreshold(times([0,500,1000,1500])),1250);
+ assert.equal(telemetryGapThreshold(times([0,1000,2000,3000])),2000);
+ assert.equal(telemetryGapThreshold(times([0,10000])),2000);
+});
 const ctx={environment:'LIVE',role:'operator',now:10000,lastTelemetry:9900,maintenance:true,armed:false,capabilities:['servo.test'],seen:false},cmd={id:'00000000-0000-4000-8000-000000000001',aircraftId:'FD-001',kind:'servo.test',expiresAt:12000};
 test('Viewer cannot write settings or authorize commands',()=>{assert.equal(roleCanWrite('viewer'),false);assert.equal(roleCanWrite('unknown'),false);assert.equal(roleCanWrite('operator'),true);assert.equal(roleCanWrite('owner'),true);assert.match(commandRejection(cmd,{...ctx,role:'viewer'}),/permission/)});
 test('DEMO and REPLAY cannot authorize live transport',()=>{for(const environment of ['DEMO','REPLAY'])assert.match(commandRejection(cmd,{...ctx,environment}),/Environment/)});

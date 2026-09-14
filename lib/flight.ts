@@ -30,6 +30,13 @@ export const defaultSettings:Settings={name:'Falcon 01',id:'FD-001',units:'g',mo
 export const clamp=(n:number,min=-1,max=1)=>Math.max(min,Math.min(max,n));
 export const fmt=(n:number|null|undefined,d=1)=>n==null||!Number.isFinite(n)?'—':n.toFixed(d);
 export const duration=(ms:number)=>`${Math.floor(Math.max(0,ms)/60000).toString().padStart(2,'0')}:${Math.floor(Math.max(0,ms)/1000%60).toString().padStart(2,'0')}`;
+export function telemetryGapThreshold(frames:Pick<Frame,'receivedAt'>[]):number{
+ const deltas:number[]=[];const recent=frames.slice(-121);
+ for(let i=1;i<recent.length;i++){const delta=recent[i].receivedAt-recent[i-1].receivedAt;if(Number.isFinite(delta)&&delta>0)deltas.push(delta)}
+ if(!deltas.length)return 2000;
+ deltas.sort((a,b)=>a-b);const middle=Math.floor(deltas.length/2),median=deltas.length%2?deltas[middle]:(deltas[middle-1]+deltas[middle])/2;
+ return Math.max(600,Math.min(2000,median*2.5));
+}
 export function mixOutputs(inputs:Inputs,m:Mixer):Record<Axis,Output>{const v={...inputs};for(const key of axes)if(key!=='throttle'){const c=m.channels[key],a=v[key],x=Math.abs(a)<c.deadband?0:Math.sign(a)*(Math.abs(a)-c.deadband)/(1-c.deadband);v[key]=((1-c.expo)*x+c.expo*x*x*x)*c.rate;}
  if(m.enabled){const roll=v.leftAileron*m.strength,common=m.common?v.rightAileron:0;v.leftAileron=common+roll;v.rightAileron=common-roll;for(const key of ['leftAileron','rightAileron'] as Axis[])if(v[key]<0)v[key]*=1-m.differential;}
  return Object.fromEntries(axes.map(key=>{const c=m.channels[key],throttle=key==='throttle',raw=(throttle?(c.reverse?1-v[key]:v[key]):v[key]*(c.reverse?-1:1))+c.trim,normalized=clamp(raw,throttle?0:-1,1),pwm=(throttle?c.min+normalized*(c.max-c.min):c.center+normalized*(normalized<0?c.center-c.min:c.max-c.center))+c.subtrim;return [key,{normalized,pwm:Math.round(clamp(pwm,c.min,c.max)),saturated:raw!==normalized||pwm<c.min||pwm>c.max}]})) as Record<Axis,Output>;
