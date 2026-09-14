@@ -60,7 +60,14 @@ export function voiceTransitions(previous:VoiceSnapshot|null,current:VoiceSnapsh
   return out.sort((a,b)=>b.priority-a.priority);
 }
 
-/** Small expiring queue; never replay old warnings after a browser resumes. */
+/**
+ * Small expiring, non-preemptive queue.
+ *
+ * Only one utterance is handed to the browser at a time. A newly-arrived
+ * critical notice may move ahead of notices that are still waiting, but it
+ * never cancels the phrase that is already being spoken. Scope changes,
+ * explicit mute/stop actions and preference changes may still clear speech.
+ */
 export class AnnouncementQueue {
   pending:VoiceNotice[]=[];
   current:VoiceNotice|null=null;
@@ -80,12 +87,13 @@ export class AnnouncementQueue {
     }
     this.pending.sort((a,b)=>b.priority-a.priority||a.at-b.at);
     this.pending=this.pending.slice(0,4);
-    if(this.current&&this.pending[0]?.priority>this.current.priority)this.cancelCurrent();
     this.pump();
   }
   reconcile(valid:(n:VoiceNotice)=>boolean){
     this.pending=this.pending.filter(n=>valid(n)&&this.clock()-n.at<=8000);
-    if(this.current&&(!valid(this.current)||this.clock()-this.current.at>8000))this.cancelCurrent();
+    // Never interrupt an utterance automatically. If its condition resolves
+    // while it is being spoken, let the sentence finish, then discard any
+    // obsolete waiting notices before starting the next sentence.
     for(const [key,at] of this.recent)if(this.clock()-at>60000)this.recent.delete(key);
     this.pump();
   }

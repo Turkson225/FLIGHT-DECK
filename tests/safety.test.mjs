@@ -89,17 +89,18 @@ test('speech transitions are deduplicated, restore only after loss, replay is si
 });
 function queueSetup(){let time=0,stops=0;const spoken=[],callbacks=[];const q=new AnnouncementQueue((n,done)=>{spoken.push(n);callbacks.push(done)},()=>stops++,()=>time);return {q,spoken,callbacks,setTime:t=>time=t,stops:()=>stops};}
 const notice=(key,priority=0,at=0)=>({key,signal:key,value:'active',text:key,category:'connections',priority,at});
-test('critical speech interrupts routine speech; cancelled callbacks cannot resume a stale queue',()=>{
+test('speech is non-preemptive and critical notices wait for the current phrase',()=>{
  const x=queueSetup();x.q.enqueue([notice('ready')]);x.q.enqueue([notice('failure',2)]);
- assert.equal(x.stops(),1);assert.deepEqual(x.spoken.map(n=>n.key),['ready','failure']);
- x.callbacks[0]();assert.equal(x.q.current.key,'failure');
+ assert.equal(x.stops(),0);assert.deepEqual(x.spoken.map(n=>n.key),['ready']);assert.equal(x.q.current.key,'ready');
+ x.callbacks[0]();assert.deepEqual(x.spoken.map(n=>n.key),['ready','failure']);assert.equal(x.q.current.key,'failure');
  x.q.clear();x.callbacks[1]();assert.equal(x.q.current,null);assert.equal(x.q.pending.length,0);
 });
-test('queue expires old speech, bounds backlog, deduplicates and drops resolved warnings',()=>{
+test('queue expires old waiting speech, bounds backlog, deduplicates and drops resolved warnings',()=>{
  const x=queueSetup();x.q.enqueue([notice('loss',2),notice('loss',2),...Array.from({length:8},(_,i)=>notice('other'+i))]);
  assert.equal(x.spoken.length,1);assert.ok(x.q.pending.length<=4);
- x.q.reconcile(n=>n.key!=='loss');assert.equal(x.stops(),1);
- x.setTime(9000);x.q.reconcile(()=>true);assert.equal(x.q.pending.length,0);assert.equal(x.q.current,null);
+ x.q.reconcile(n=>n.key!=='loss');assert.equal(x.stops(),0);assert.equal(x.q.current.key,'loss');
+ x.setTime(9000);x.q.reconcile(()=>true);assert.equal(x.q.pending.length,0);assert.equal(x.q.current.key,'loss');
+ x.callbacks[0]();assert.equal(x.q.current,null);
  x.q.enqueue([notice('expired',2)]);assert.equal(x.q.current,null);
 });
 test('voice preferences fail closed and clamp invalid browser storage',()=>{

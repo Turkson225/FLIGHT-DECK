@@ -13,7 +13,8 @@ A React + TypeScript fixed-wing engineering console, hosted as a static GitHub P
 - Cruise/Takeoff/Smooth landing **surface presets**: configurable angles, travel references, smoothstep transitions, bounded angular rate and per-servo PWM limits. These are not automatic flight controllers.
 - Startup visual inspection simulator: five seconds after simulated power-up, four-surface sweep, neutral return, explicit maintenance gates, abort and ESC exclusion.
 - Guarded parachute DEMO deployment, one-shot latch/reset, recovery telemetry and recording audit. Live recovery dispatch remains disabled.
-- Browser voice announcements with per-browser voice/volume/rate/category settings, explicit enable, priority, deduplication, expiry, captions and replay isolation.
+- Browser voice announcements with per-browser voice/volume/rate/category settings, explicit enable, sequential non-overlapping playback, priority for waiting notices, deduplication, expiry, captions and replay isolation.
+- Last-confirmed instrument hold during delayed telemetry, with a persistent age warning and no fabricated or extrapolated measurements.
 - Nonblocking C++ startup reference, with no pin writes, plus radio/UART contracts and the original wiring references.
 - GitHub Actions build/test/deployment workflow. Existing Sites data is not automatically migrated.
 
